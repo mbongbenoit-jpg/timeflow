@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>⏱ TimeFlow</title>
+<link rel="manifest" href="manifest.json"/>
+<meta name="theme-color" content="#6C63FF"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="TimeFlow"/>
+<link rel="apple-touch-icon" href="icon-192.png"/>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:#0F0F14;color:#E8E8F0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh;padding-bottom:80px;}
+  input,button{font-family:inherit;}
+  button{cursor:pointer;}
+
+  /* Header */
+  #header{background:#16161E;border-bottom:1px solid #2A2A38;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100;}
+  #header h1{font-size:18px;font-weight:800;letter-spacing:-0.5px;}
+  #header .sub{font-size:11px;color:#555;margin-top:2px;}
+  #tabs{display:flex;gap:6px;}
+  .tab-btn{padding:7px 11px;border-radius:8px;border:none;font-size:11px;font-weight:700;transition:all .2s;background:#2A2A38;color:#888;}
+  .tab-btn.active{background:#6C63FF;color:#fff;}
+
+  /* Main */
+  #main{max-width:600px;margin:0 auto;padding:18px 14px;}
+
+  /* Toast */
+  #toast{position:fixed;top:14px;left:50%;transform:translateX(-50%) translateY(-60px);background:#1E1E2E;border:1px solid #6C63FF55;padding:10px 20px;border-radius:10px;font-size:13px;font-weight:600;z-index:9999;transition:transform .3s;white-space:nowrap;box-shadow:0 4px 20px #00000099;}
+  #toast.show{transform:translateX(-50%) translateY(0);}
+
+  /* Active timer */
+  #active-banner{border-radius:14px;padding:14px 18px;margin-bottom:18px;display:none;justify-content:space-between;align-items:center;}
+  #active-banner.visible{display:flex;}
+  #timer-display{font-size:28px;font-weight:800;font-variant-numeric:tabular-nums;text-align:right;}
+  #stop-btn{margin-top:6px;padding:6px 16px;border:none;border-radius:7px;color:#fff;font-weight:700;font-size:12px;display:block;width:100%;}
+
+  /* Cards */
+  .card{background:#16161E;border:1px solid #2A2A38;border-radius:13px;padding:14px 16px;margin-bottom:10px;}
+  .card-label{font-size:11px;color:#555;font-weight:700;letter-spacing:.5px;margin-bottom:10px;}
+
+  /* Add activity form */
+  #add-form input{width:100%;background:#0F0F14;border:1px solid #2A2A38;border-radius:8px;padding:9px 13px;color:#E8E8F0;font-size:13px;outline:none;margin-bottom:8px;}
+  #add-form input::placeholder{color:#444;}
+  #add-row{display:flex;gap:8px;}
+  #add-row input{flex:1;margin-bottom:0;}
+  #add-btn{padding:9px 16px;background:#6C63FF;border:none;border-radius:8px;color:#fff;font-weight:700;font-size:18px;}
+
+  /* Activity list */
+  .act-item{background:#16161E;border:1px solid #2A2A38;border-radius:13px;padding:12px 14px;margin-bottom:9px;display:flex;align-items:center;gap:10px;transition:border-color .2s;}
+  .act-item.running{border-color:var(--c);}
+  .act-dot{width:10px;height:10px;border-radius:50%;background:var(--c);flex-shrink:0;}
+  .act-info{flex:1;min-width:0;}
+  .act-name{font-weight:600;font-size:14px;}
+  .act-stats{font-size:11px;color:#555;margin-top:2px;}
+  .act-stats span{color:#888;}
+  .act-stats .clr{color:var(--c);}
+  .goal-bar-wrap{background:#2A2A38;border-radius:3px;height:3px;margin-top:5px;}
+  .goal-bar{height:100%;border-radius:3px;background:var(--c);transition:width .4s;}
+  .act-actions{display:flex;gap:6px;align-items:center;flex-shrink:0;}
+  .btn-start{padding:6px 12px;background:#2A2A38;border:1px solid #33333F;border-radius:7px;font-size:11px;font-weight:700;}
+  .btn-stop{padding:6px 12px;border:none;border-radius:7px;color:#fff;font-size:11px;font-weight:700;background:var(--c);}
+  .btn-goal{background:none;border:none;color:#555;font-size:13px;padding:3px 5px;}
+  .btn-del{background:none;border:none;color:#333;font-size:14px;padding:3px 5px;}
+  .btn-del:hover{color:#FF6B6B;}
+  .empty-state{text-align:center;color:#444;padding:50px 0;font-size:14px;line-height:1.8;}
+
+  /* Notif bar */
+  .notif-bar{background:#1A1A2A;border:1px solid #6C63FF33;border-radius:11px;padding:11px 15px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;font-size:13px;}
+  .notif-bar.on{border-color:#43D9A333;color:#43D9A3;}
+  .notif-bar.off{color:#AAA;}
+  .notif-bar button{padding:6px 13px;border:none;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;}
+  .notif-bar.off button{background:#6C63FF;color:#fff;}
+  .notif-bar.on button{background:#2A2A38;color:#888;}
+
+  /* Recap */
+  .week-selector{display:flex;gap:7px;overflow-x:auto;padding-bottom:6px;margin-bottom:16px;scrollbar-width:none;}
+  .week-selector::-webkit-scrollbar{display:none;}
+  .week-btn{padding:6px 13px;border-radius:8px;border:none;font-size:11px;font-weight:700;white-space:nowrap;flex-shrink:0;background:#2A2A38;color:#888;}
+  .week-btn.active{background:#6C63FF;color:#fff;}
+
+  .total-box{background:linear-gradient(135deg,#6C63FF22,#6C63FF0A);border:1px solid #6C63FF44;border-radius:14px;padding:16px 18px;margin-bottom:18px;display:flex;justify-content:space-between;align-items:center;}
+  .total-label{font-size:11px;color:#6C63FF;font-weight:700;}
+  .total-val{font-size:24px;font-weight:800;margin-top:3px;}
+  .export-btns{display:flex;flex-direction:column;gap:6px;}
+  .btn-csv{padding:6px 12px;background:#43D9A322;border:1px solid #43D9A344;border-radius:7px;color:#43D9A3;font-size:11px;font-weight:700;}
+  .btn-sheets{padding:6px 12px;background:#4FC3F722;border:1px solid #4FC3F744;border-radius:7px;color:#4FC3F7;font-size:11px;font-weight:700;}
+
+  .recap-act{background:#16161E;border:1px solid #2A2A38;border-radius:12px;padding:13px 16px;margin-bottom:10px;}
+  .recap-act-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+  .recap-act-name{display:flex;align-items:center;gap:8px;font-weight:600;font-size:13px;}
+  .recap-act-dot{width:9px;height:9px;border-radius:50%;background:var(--c);}
+  .recap-act-time{font-weight:700;color:var(--c);font-size:13px;}
+  .recap-act-pct{color:#444;font-size:11px;margin-left:7px;}
+  .share-bar{background:#2A2A38;border-radius:4px;height:5px;margin-bottom:8px;}
+  .share-bar-fill{height:100%;border-radius:4px;background:var(--c);}
+  .goal-row{display:flex;justify-content:space-between;margin-bottom:4px;}
+  .goal-row span{font-size:11px;color:#666;}
+  .goal-row .gpct{font-size:11px;font-weight:600;}
+  .goal-bar2{background:#2A2A38;border-radius:4px;height:4px;margin-bottom:9px;}
+  .goal-bar2-fill{height:100%;border-radius:4px;}
+  .days-row{display:flex;gap:3px;margin-top:6px;}
+  .day-col{flex:1;text-align:center;}
+  .day-bar{border-radius:4px;min-height:18px;margin-bottom:3px;transition:height .3s;}
+  .day-label{font-size:9px;color:#444;}
+  .day-label.today{color:#E8E8F0;font-weight:700;}
+
+  /* History */
+  .hist-item{background:#16161E;border:1px solid #2A2A38;border-radius:12px;padding:13px 16px;margin-bottom:10px;}
+  .hist-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+  .hist-title{font-size:13px;font-weight:700;}
+  .hist-sub{font-size:11px;color:#555;margin-top:2px;}
+  .hist-total{font-size:15px;font-weight:800;color:#6C63FF;}
+  .hist-tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px;}
+  .hist-tag{border-radius:6px;padding:4px 10px;font-size:11px;font-weight:600;}
+  .btn-detail{padding:5px 12px;background:#2A2A38;border:none;border-radius:7px;color:#777;font-size:11px;}
+
+  /* Modal */
+  #modal-overlay{position:fixed;inset:0;background:#000000BB;z-index:999;display:none;align-items:center;justify-content:center;padding:16px;}
+  #modal-overlay.open{display:flex;}
+  #modal-box{background:#1C1C28;border:1px solid #2A2A38;border-radius:16px;padding:22px 20px;width:100%;max-width:380px;max-height:80vh;overflow-y:auto;}
+  #modal-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+  #modal-title span{font-weight:700;font-size:15px;}
+  #modal-title button{background:none;border:none;color:#777;font-size:20px;}
+  #modal-body label{font-size:11px;color:#666;font-weight:700;display:block;margin-bottom:6px;letter-spacing:.4px;}
+  #modal-body input{width:100%;background:#0F0F14;border:1px solid #2A2A38;border-radius:8px;padding:10px 13px;color:#E8E8F0;font-size:14px;outline:none;margin-bottom:14px;}
+  .modal-days{display:flex;gap:5px;margin-bottom:18px;}
+  .modal-day{flex:1;padding:8px 2px;border-radius:6px;border:none;font-size:11px;font-weight:700;background:#2A2A38;color:#555;}
+  .modal-day.on{background:#6C63FF;color:#fff;}
+  .btn-save{width:100%;padding:11px;background:#6C63FF;border:none;border-radius:8px;color:#fff;font-weight:700;font-size:14px;}
+  .btn-remove{padding:8px 14px;background:#2A2A38;border:none;border-radius:8px;color:#777;font-size:12px;}
+  .modal-row{display:flex;gap:8px;margin-top:4px;}
+  .modal-row .btn-save{margin-top:0;}
+
+  @media(max-width:400px){
+    #header h1{font-size:16px;}
+    .tab-btn{padding:6px 9px;font-size:10px;}
+  }
+</style>
+</head>
+<body>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<!-- Modal -->
+<div id="modal-overlay">
+  <div id="modal-box">
+    <div id="modal-title"><span id="modal-title-text"></span><button onclick="closeModal()">✕</button></div>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<!-- Header -->
+<div id="header">
+  <div>
+    <h1>⏱ TimeFlow</h1>
+    <div class="sub" id="week-label">Semaine en cours</div>
+  </div>
+  <div id="tabs">
+    <button class="tab-btn active" onclick="switchTab('tracker')">🎯 Tracker</button>
+    <button class="tab-btn" onclick="switchTab('recap')">📊 Récap</button>
+    <button class="tab-btn" onclick="switchTab('history')">📅 Historique</button>
+  </div>
+</div>
+
+<div id="main"></div>
+
+<script>
+// ── Storage ──────────────────────────────────────────────
+const SK = 'timeflow_v3';
+function load(){try{const r=localStorage.getItem(SK);if(r)return JSON.parse(r);}catch{}return{activities:[],sessions:[]};}
+function save(){try{localStorage.setItem(SK,JSON.stringify(DB));}catch{}}
+let DB = load();
+
+// ── Helpers ──────────────────────────────────────────────
+const COLORS = ['#6C63FF','#FF6B6B','#43D9A3','#FFB347','#4FC3F7','#F06292','#AED581','#FF8A65','#BA68C8','#4DB6AC'];
+const DAYS = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
+
+function fmt(s){const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sec=s%60;return`${pad(h)}:${pad(m)}:${pad(sec)}`;}
+function pad(n){return String(n).padStart(2,'0');}
+function fmtS(s){const h=Math.floor(s/3600),m=Math.floor((s%3600)/60);if(h>0)return`${h}h ${m}m`;return`${m}m`;}
+function getDay(){const d=new Date().getDay();return d===0?6:d-1;}
+function getWeekKey(){
+  const now=new Date(),start=new Date(now);
+  start.setDate(now.getDate()-getDay());
+  return`${start.getFullYear()}-W${start.toISOString().slice(0,10)}`;
+}
+function weekLabel(wk){
+  if(!wk)return'';
+  const p=wk.split('-W');
+  if(p.length<2)return wk;
+  try{const d=new Date(p[1]);return`Sem. du ${d.toLocaleDateString('fr-FR',{day:'numeric',month:'short'})}`;}
+  catch{return wk;}
+}
+function totalFor(actId,sessions){return sessions.filter(s=>s.activityId===actId).reduce((a,s)=>a+s.duration,0);}
+function totalForDay(actId,day,sessions){return sessions.filter(s=>s.activityId===actId&&s.day===day).reduce((a,s)=>a+s.duration,0);}
+
+// ── State ────────────────────────────────────────────────
+let activeTimer = null; // {activityId, startTime}
+let elapsed = 0;
+let timerInterval = null;
+let currentTab = 'tracker';
+let displayedWeek = null; // null = current
+const notifSupported = (typeof Notification !== 'undefined');
+let notifGranted = notifSupported && Notification.permission === 'granted';
+let reminderTime = '20:00';
+let reminderDays = [1,2,3,4,5];
+let reminderInterval = null;
+
+// ── Toast ─────────────────────────────────────────────────
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+// ── Modal ─────────────────────────────────────────────────
+function openModal(title,bodyHTML){
+  document.getElementById('modal-title-text').textContent=title;
+  document.getElementById('modal-body').innerHTML=bodyHTML;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+function closeModal(){document.getElementById('modal-overlay').classList.remove('open');}
+document.getElementById('modal-overlay').addEventListener('click',function(e){if(e.target===this)closeModal();});
+
+// ── Notifications ─────────────────────────────────────────
+function startReminderCheck(){
+  clearInterval(reminderInterval);
+  if(!notifGranted)return;
+  reminderInterval=setInterval(()=>{
+    const now=new Date();
+    const [rh,rm]=reminderTime.split(':').map(Number);
+    if(now.getHours()===rh&&now.getMinutes()===rm&&reminderDays.includes(getDay())){
+      notifSupported&&new Notification('📊 TimeFlow — Rappel',{body:"N'oublie pas de tracker tes activités aujourd'hui !"});
+    }
+  },30000);
+}
+
+async function enableNotifs(){
+  if(!notifSupported){showToast('❌ Notifications non supportées');return;}
+  const p=notifSupported?await Notification.requestPermission():'denied';
+  notifGranted=p==='granted';
+  if(notifGranted){startReminderCheck();showReminderModal();showToast('🔔 Notifications activées');}
+  else showToast('❌ Permission refusée');
+  render();
+}
+
+function showReminderModal(){
+  openModal('🔔 Rappel quotidien',`
+    <p style="color:#888;font-size:13px;margin-bottom:14px">Reçois un rappel pour tracker tes activités.</p>
+    <label>HEURE DE RAPPEL</label>
+    <input type="time" id="r-time" value="${reminderTime}"/>
+    <label>JOURS</label>
+    <div class="modal-days">
+      ${DAYS.map((d,i)=>`<button class="modal-day${reminderDays.includes(i)?' on':''}" onclick="toggleRDay(${i},this)">${d}</button>`).join('')}
+    </div>
+    <button class="btn-save" onclick="saveReminder()">Enregistrer</button>
+  `);
+}
+function toggleRDay(i,btn){
+  if(reminderDays.includes(i))reminderDays=reminderDays.filter(x=>x!==i);
+  else reminderDays.push(i);
+  btn.classList.toggle('on');
+}
+function saveReminder(){
+  reminderTime=document.getElementById('r-time').value;
+  startReminderCheck();
+  closeModal();
+  showToast('🔔 Rappel configuré pour '+reminderTime);
+}
+
+// ── Activities ────────────────────────────────────────────
+function addActivity(){
+  const name=document.getElementById('new-name').value.trim();
+  const goalH=document.getElementById('new-goal').value.trim();
+  if(!name)return;
+  if(DB.activities.find(a=>a.name.toLowerCase()===name.toLowerCase())){showToast('❌ Activité déjà existante');return;}
+  DB.activities.push({id:Date.now().toString(),name,color:COLORS[DB.activities.length%COLORS.length],goalHours:goalH?parseFloat(goalH):null});
+  save(); render(); showToast(`✅ "${name}" ajouté`);
+}
+function deleteActivity(id){
+  if(activeTimer&&activeTimer.activityId===id)stopTimer();
+  DB.activities=DB.activities.filter(a=>a.id!==id);
+  DB.sessions=DB.sessions.filter(s=>s.activityId!==id);
+  save(); render();
+}
+function openGoalModal(actId){
+  const act=DB.activities.find(a=>a.id===actId);
+  if(!act)return;
+  openModal(`🎯 Objectif — ${act.name}`,`
+    <p style="color:#888;font-size:13px;margin-bottom:14px">Objectif hebdomadaire en heures.</p>
+    <label>HEURES / SEMAINE</label>
+    <input type="number" id="g-hours" value="${act.goalHours||''}" min="0.5" max="168" step="0.5" placeholder="Ex: 10"/>
+    <div class="modal-row">
+      <button class="btn-save" onclick="saveGoal('${actId}')">Enregistrer</button>
+      <button class="btn-remove" onclick="saveGoal('${actId}',true)">Supprimer</button>
+    </div>
+  `);
+}
+function saveGoal(actId,remove=false){
+  const h=remove?null:parseFloat(document.getElementById('g-hours').value)||null;
+  DB.activities=DB.activities.map(a=>a.id===actId?{...a,goalHours:h}:a);
+  save(); closeModal(); render(); showToast('🎯 Objectif mis à jour');
+}
+
+// ── Timer ─────────────────────────────────────────────────
+function startTimer(actId){
+  if(activeTimer)stopTimer();
+  activeTimer={activityId:actId,startTime:Date.now()};
+  const act=DB.activities.find(a=>a.id===actId);
+  clearInterval(timerInterval);
+  timerInterval=setInterval(()=>{
+    elapsed=Math.floor((Date.now()-activeTimer.startTime)/1000);
+    updateBanner();
+    if(elapsed>0&&elapsed%3600===0&&notifGranted&&act)
+      notifSupported&&new Notification('⏱ TimeFlow',{body:`${elapsed/3600}h sur ${act.name} !`});
+  },1000);
+  render(); showToast(`▶ ${act?.name} démarré`);
+}
+function stopTimer(){
+  if(!activeTimer)return;
+  const duration=Math.floor((Date.now()-activeTimer.startTime)/1000);
+  clearInterval(timerInterval);
+  if(duration>=1){
+    DB.sessions.push({id:Date.now().toString(),activityId:activeTimer.activityId,
+      duration,day:getDay(),date:new Date().toISOString(),weekKey:getWeekKey()});
+    save();
+    const act=DB.activities.find(a=>a.id===activeTimer.activityId);
+    showToast(`■ ${act?.name} — ${fmtS(duration)} enregistré`);
+  }
+  activeTimer=null; elapsed=0; render();
+}
+function updateBanner(){
+  const b=document.getElementById('active-banner');
+  if(!b||!activeTimer)return;
+  const act=DB.activities.find(a=>a.id===activeTimer.activityId);
+  if(!act)return;
+  document.getElementById('timer-display').textContent=fmt(elapsed);
+  document.getElementById('timer-display').style.color=act.color;
+  // Update goal pct if shown
+  const gp=document.getElementById('banner-goal');
+  if(gp&&act.goalHours){
+    const wkSess=DB.sessions.filter(s=>s.weekKey===getWeekKey());
+    const done=totalFor(act.id,wkSess)+elapsed;
+    const pct=Math.min(100,Math.round((done/(act.goalHours*3600))*100));
+    gp.textContent=`Objectif : ${pct}% (${fmtS(done)} / ${act.goalHours}h)`;
+  }
+}
+
+// ── Export ────────────────────────────────────────────────
+function exportCSV(sessions){
+  const rows=[['Semaine','Activité','Jour','Date','Durée (min)','Durée (h:m:s)']];
+  sessions.forEach(s=>{
+    const act=DB.activities.find(a=>a.id===s.activityId);
+    if(!act)return;
+    rows.push([s.weekKey,act.name,DAYS[s.day]||'',new Date(s.date).toLocaleDateString('fr-FR'),Math.round(s.duration/60),fmt(s.duration)]);
+  });
+  const csv=rows.map(r=>r.map(c=>`"${c}"`).join(',')).join('\n');
+  const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download=`timeflow_${getWeekKey()}.csv`;a.click();
+  showToast('⬇ CSV téléchargé');
+}
+function exportSheets(sessions){
+  const lines=sessions.map(s=>{
+    const act=DB.activities.find(a=>a.id===s.activityId);
+    if(!act)return null;
+    return`${s.weekKey}\t${act.name}\t${DAYS[s.day]}\t${new Date(s.date).toLocaleDateString('fr-FR')}\t${Math.round(s.duration/60)}\t${fmt(s.duration)}`;
+  }).filter(Boolean);
+  const text='Semaine\tActivité\tJour\tDate\tDurée (min)\tDurée (h:m:s)\n'+lines.join('\n');
+  if(navigator.clipboard){
+    navigator.clipboard.writeText(text).then(()=>showToast('📋 Copié ! Colle dans Google Sheets'));
+  } else {
+    const ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();
+    document.execCommand('copy');document.body.removeChild(ta);
+    showToast('📋 Copié ! Colle dans Google Sheets');
+  }
+}
+
+// ── Tab switch ────────────────────────────────────────────
+function switchTab(tab){
+  currentTab=tab;
+  document.querySelectorAll('.tab-btn').forEach((b,i)=>{
+    b.classList.toggle('active',['tracker','recap','history'][i]===tab);
+  });
+  render();
+}
+
+// ── Render ────────────────────────────────────────────────
+function render(){
+  const today=getDay();
+  const currentWK=getWeekKey();
+  const dispWK=displayedWeek||currentWK;
+  const isCurrentWK=dispWK===currentWK;
+  const weekSess=DB.sessions.filter(s=>s.weekKey===dispWK);
+  const totalWK=weekSess.reduce((a,s)=>a+s.duration,0);
+  const allWKs=[...new Set(DB.sessions.map(s=>s.weekKey))].sort().reverse();
+
+  // Week label in header
+  document.getElementById('week-label').textContent = isCurrentWK?'Semaine en cours':weekLabel(dispWK);
+
+  let html='';
+
+  // ── Active banner (all tabs) ─────────────────────────────
+  if(activeTimer){
+    const act=DB.activities.find(a=>a.id===activeTimer.activityId);
+    if(act){
+      const wkSess=DB.sessions.filter(s=>s.weekKey===currentWK);
+      const done=totalFor(act.id,wkSess)+elapsed;
+      const goalPct=act.goalHours?Math.min(100,Math.round((done/(act.goalHours*3600))*100)):null;
+      html+=`<div id="active-banner" class="visible" style="background:${act.color}18;border:1px solid ${act.color}55;">
+        <div>
+          <div style="font-size:11px;color:${act.color};font-weight:700;margin-bottom:3px">● EN COURS</div>
+          <div style="font-weight:700;font-size:16px">${act.name}</div>
+          ${act.goalHours?`<div id="banner-goal" style="font-size:11px;color:#777;margin-top:3px">Objectif : ${goalPct}% (${fmtS(done)} / ${act.goalHours}h)</div>`:''}
+        </div>
+        <div style="text-align:right">
+          <div id="timer-display" style="font-size:28px;font-weight:800;font-variant-numeric:tabular-nums;color:${act.color}">${fmt(elapsed)}</div>
+          <button id="stop-btn" onclick="stopTimer()" style="margin-top:6px;padding:6px 16px;background:${act.color};border:none;border-radius:7px;color:#fff;font-weight:700;font-size:12px;">■ Arrêter</button>
+        </div>
+      </div>`;
+    }
+  }
+
+  // ── TRACKER ──────────────────────────────────────────────
+  if(currentTab==='tracker'){
+    // Notif bar
+    html+=notifGranted
+      ?`<div class="notif-bar on">🔔 Rappels activés — ${reminderTime}<button onclick="showReminderModal()">Modifier</button></div>`
+      :`<div class="notif-bar off">🔔 Active les rappels quotidiens<button onclick="enableNotifs()">Activer</button></div>`;
+
+    // Add form
+    html+=`<div class="card"><div class="card-label">NOUVELLE ACTIVITÉ</div>
+      <div id="add-form">
+        <div id="add-row">
+          <input id="new-name" placeholder="Nom (ex: FoyerFinance, Plomberie...)" onkeydown="if(event.key==='Enter')addActivity()"/>
+          <button id="add-btn" onclick="addActivity()">+</button>
+        </div>
+        <input id="new-goal" type="number" placeholder="Objectif hebdo (heures) — optionnel" min="0.5" max="168" step="0.5"/>
+      </div>
+    </div>`;
+
+    // Activity list
+    if(DB.activities.length===0){
+      html+=`<div class="empty-state">Ajoute ta première activité ↑</div>`;
+    } else {
+      const wkSess=DB.sessions.filter(s=>s.weekKey===currentWK);
+      DB.activities.forEach(act=>{
+        const isActive=activeTimer?.activityId===act.id;
+        const total=totalFor(act.id,wkSess);
+        const todayT=totalForDay(act.id,today,wkSess);
+        const goalSec=act.goalHours?act.goalHours*3600:null;
+        const goalPct=goalSec?Math.min(100,Math.round((total/goalSec)*100)):null;
+        html+=`<div class="act-item${isActive?' running':''}" style="--c:${act.color}">
+          <div class="act-dot"></div>
+          <div class="act-info">
+            <div class="act-name">${act.name}</div>
+            <div class="act-stats">
+              Auj: <span>${todayT>0?fmtS(todayT):'—'}</span> · Sem: <span class="clr">${total>0?fmtS(total):'—'}</span>
+              ${goalSec?`<span style="color:${goalPct>=100?'#43D9A3':'#666'}"> · ${goalPct}% obj.</span>`:''}
+            </div>
+            ${goalSec?`<div class="goal-bar-wrap"><div class="goal-bar" style="width:${goalPct}%;background:${goalPct>=100?'#43D9A3':act.color}"></div></div>`:''}
+          </div>
+          <div class="act-actions">
+            <button class="btn-goal" onclick="openGoalModal('${act.id}')" title="Objectif">🎯</button>
+            ${isActive
+              ?`<button class="btn-stop" onclick="stopTimer()" style="--c:${act.color}">■ Stop</button>`
+              :`<button class="btn-start" onclick="startTimer('${act.id}')" style="color:${act.color};border-color:${act.color}44">▶ Start</button>`
+            }
+            <button class="btn-del" onclick="if(confirm('Supprimer ${act.name.replace(/'/g,"\\'")} ?'))deleteActivity('${act.id}')">✕</button>
+          </div>
+        </div>`;
+      });
+    }
+  }
+
+  // ── RECAP ─────────────────────────────────────────────────
+  else if(currentTab==='recap'){
+    // Week selector
+    html+=`<div class="week-selector">
+      <button class="week-btn${!displayedWeek?' active':''}" onclick="setWeek(null)">Semaine actuelle</button>
+      ${allWKs.filter(w=>w!==currentWK).map(w=>`<button class="week-btn${displayedWeek===w?' active':''}" onclick="setWeek('${w}')">${weekLabel(w)}</button>`).join('')}
+    </div>`;
+
+    // Total + export
+    html+=`<div class="total-box">
+      <div><div class="total-label">TOTAL ${isCurrentWK?'SEMAINE':'SEMAINE SÉLECT.'}</div><div class="total-val">${fmtS(totalWK)}</div></div>
+      <div class="export-btns">
+        <button class="btn-csv" onclick="exportCSV(DB.sessions.filter(s=>s.weekKey==='${dispWK}'))">⬇ CSV</button>
+        <button class="btn-sheets" onclick="exportSheets(DB.sessions.filter(s=>s.weekKey==='${dispWK}'))">📋 Sheets</button>
+      </div>
+    </div>`;
+
+    const sorted=[...DB.activities].sort((a,b)=>totalFor(b.id,weekSess)-totalFor(a.id,weekSess)).filter(a=>totalFor(a.id,weekSess)>0);
+    if(sorted.length===0){
+      html+=`<div class="empty-state">Aucune donnée pour cette semaine.<br>Va tracker tes activités !</div>`;
+    } else {
+      sorted.forEach(act=>{
+        const total=totalFor(act.id,weekSess);
+        const pct=totalWK>0?Math.round((total/totalWK)*100):0;
+        const goalSec=act.goalHours?act.goalHours*3600:null;
+        const goalPct=goalSec?Math.min(100,Math.round((total/goalSec)*100)):null;
+        html+=`<div class="recap-act" style="--c:${act.color}">
+          <div class="recap-act-head">
+            <div class="recap-act-name"><div class="recap-act-dot"></div>${act.name}</div>
+            <div><span class="recap-act-time">${fmtS(total)}</span><span class="recap-act-pct">${pct}%</span></div>
+          </div>
+          <div class="share-bar"><div class="share-bar-fill" style="width:${pct}%"></div></div>
+          ${goalSec?`
+            <div class="goal-row"><span>🎯 Objectif ${act.goalHours}h</span><span class="gpct" style="color:${goalPct>=100?'#43D9A3':'#888'}">${goalPct}% ${goalPct>=100?'✓':''}</span></div>
+            <div class="goal-bar2"><div class="goal-bar2-fill" style="width:${goalPct}%;background:${goalPct>=100?'#43D9A3':act.color}"></div></div>
+          `:''}
+          <div class="days-row">
+            ${DAYS.map((d,i)=>{
+              const dt=totalForDay(act.id,i,weekSess);
+              const isToday=isCurrentWK&&i===today;
+              const barH=dt>0?Math.max(18,Math.min(48,dt/60)):18;
+              return`<div class="day-col">
+                <div class="day-bar" style="height:${barH}px;background:${dt>0?act.color+'BB':'#2A2A38'};border:${isToday?`1px solid ${act.color}`:'none'}" title="${dt>0?fmtS(dt):'—'}"></div>
+                <div class="day-label${isToday?' today':''}">${d}</div>
+              </div>`;
+            }).join('')}
+          </div>
+        </div>`;
+      });
+    }
+  }
+
+  // ── HISTORY ───────────────────────────────────────────────
+  else if(currentTab==='history'){
+    html+=`<div style="font-size:11px;color:#555;font-weight:700;letter-spacing:.5px;margin-bottom:14px">TOUTES LES SEMAINES</div>`;
+    html+=`<div style="display:flex;gap:8px;margin-bottom:16px">
+      <button class="btn-csv" style="flex:1;padding:10px" onclick="exportCSV(DB.sessions)">⬇ Exporter tout (CSV)</button>
+      <button class="btn-sheets" style="flex:1;padding:10px" onclick="exportSheets(DB.sessions)">📋 Tout → Google Sheets</button>
+    </div>`;
+
+    if(allWKs.length===0){
+      html+=`<div class="empty-state">Aucun historique encore.</div>`;
+    } else {
+      allWKs.forEach(wk=>{
+        const wkS=DB.sessions.filter(s=>s.weekKey===wk);
+        const wkT=wkS.reduce((a,s)=>a+s.duration,0);
+        const tags=DB.activities.map(act=>{
+          const t=totalFor(act.id,wkS);
+          if(!t)return'';
+          return`<span class="hist-tag" style="background:${act.color}22;color:${act.color};border:1px solid ${act.color}44">${act.name} · ${fmtS(t)}</span>`;
+        }).join('');
+        html+=`<div class="hist-item">
+          <div class="hist-head">
+            <div><div class="hist-title">${wk===currentWK?'Semaine actuelle':weekLabel(wk)}</div><div class="hist-sub">${wkS.length} sessions</div></div>
+            <div class="hist-total">${fmtS(wkT)}</div>
+          </div>
+          <div class="hist-tags">${tags}</div>
+          <button class="btn-detail" onclick="setWeek('${wk==='currentWK'?null:wk}');switchTab('recap')">Voir le détail →</button>
+        </div>`;
+      });
+    }
+  }
+
+  document.getElementById('main').innerHTML=html;
+}
+
+function setWeek(wk){displayedWeek=wk;render();}
+
+// Initial render
+render();
+startReminderCheck();
+</script>
+
+<script>
+// ── Service Worker & PWA ─────────────────────────────────
+if('serviceWorker' in navigator){
+  window.addEventListener('load', async () => {
+    try {
+      const reg = await navigator.serviceWorker.register('sw.js');
+      console.log('SW registered');
+      
+      // Request notification permission via SW
+      window._swReg = reg;
+    } catch(e) {
+      console.log('SW failed:', e);
+    }
+  });
+}
+
+// Override enableNotifs to use SW-based notifications
+window._originalEnableNotifs = window.enableNotifs;
+
+// Schedule daily reminder via SW message
+function scheduleReminder(time, days) {
+  if(!window._swReg) return;
+  // Check every minute if it's time
+  setInterval(() => {
+    const now = new Date();
+    const [rh, rm] = time.split(':').map(Number);
+    const day = getDay();
+    if(now.getHours() === rh && now.getMinutes() === rm && days.includes(day)) {
+      if(navigator.serviceWorker.controller) {
+        navigator.serviceWorker.controller.postMessage({ type: 'REMINDER' });
+      }
+    }
+  }, 30000);
+}
+
+// PWA install prompt
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  // Show install banner if not standalone
+  if(window.matchMedia('(display-mode: standalone)').matches) return;
+  const banner = document.createElement('div');
+  banner.id = 'install-banner';
+  banner.style.cssText = 'position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:#1E1E2E;border:1px solid #6C63FF55;padding:12px 18px;border-radius:12px;font-size:13px;font-weight:600;z-index:9998;display:flex;gap:12px;align-items:center;box-shadow:0 4px 20px #00000099;white-space:nowrap;';
+  banner.innerHTML = '<span>📲 Installer TimeFlow</span><button onclick="installPWA()" style="padding:6px 14px;background:#6C63FF;border:none;border-radius:7px;color:#fff;font-weight:700;font-size:12px;cursor:pointer">Installer</button><button onclick="this.parentElement.remove()" style="background:none;border:none;color:#555;font-size:16px;cursor:pointer">✕</button>';
+  document.body.appendChild(banner);
+});
+
+async function installPWA() {
+  if(!deferredPrompt) return;
+  deferredPrompt.prompt();
+  const { outcome } = await deferredPrompt.userChoice;
+  deferredPrompt = null;
+  const b = document.getElementById('install-banner');
+  if(b) b.remove();
+}
+</script>
+
+</body>
+</html>
