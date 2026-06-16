@@ -1,0 +1,1705 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
+<title>⏱ TimeFlow Pro</title>
+<link rel="manifest" href="manifest.json"/>
+<meta name="theme-color" content="#6C63FF"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="TimeFlow"/>
+<link rel="apple-touch-icon" href="icon-192.png"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{background:#0A0A0F;color:#E8E8F0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh;padding-bottom:90px;}
+input,button,select,textarea{font-family:inherit;font-size:14px;}
+button{cursor:pointer;}
+:root{
+  --bg:#0A0A0F;--surface:#14141E;--surface2:#1C1C2A;--border:#252535;
+  --border2:#2E2E42;--text:#E8E8F0;--muted:#6B6B8A;--accent:#6C63FF;
+  --green:#43D9A3;--red:#FF6B6B;--yellow:#FFB347;--blue:#4FC3F7;
+  --radius:14px;--radius-sm:8px;
+}
+/* ── HEADER ── */
+#header{background:var(--surface);border-bottom:1px solid var(--border);padding:12px 16px;position:sticky;top:0;z-index:200;display:flex;justify-content:space-between;align-items:center;}
+.logo{font-size:17px;font-weight:800;letter-spacing:-.5px;}
+.logo span{color:var(--accent);}
+/* ── NAV ── */
+#bottom-nav{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);display:flex;z-index:200;padding-bottom:env(safe-area-inset-bottom);}
+.nav-btn{flex:1;padding:10px 4px 8px;border:none;background:none;color:var(--muted);font-size:9px;font-weight:700;letter-spacing:.3px;display:flex;flex-direction:column;align-items:center;gap:3px;transition:color .2s;}
+.nav-btn .icon{font-size:20px;line-height:1;}
+.nav-btn.active{color:var(--accent);}
+/* ── FAB ── */
+#fab{position:fixed;bottom:72px;right:18px;width:52px;height:52px;background:var(--accent);border:none;border-radius:50%;font-size:26px;color:#fff;box-shadow:0 4px 20px #6C63FF66;display:none;align-items:center;justify-content:center;z-index:190;}
+/* ── TOAST ── */
+#toast{position:fixed;top:14px;left:50%;transform:translateX(-50%) translateY(-80px);background:var(--surface2);border:1px solid var(--accent)44;padding:10px 20px;border-radius:10px;font-size:13px;font-weight:600;z-index:9999;transition:transform .3s cubic-bezier(.34,1.56,.64,1);white-space:nowrap;box-shadow:0 8px 30px #00000099;pointer-events:none;}
+#toast.show{transform:translateX(-50%) translateY(0);}
+/* ── MODAL ── */
+#modal-overlay{position:fixed;inset:0;background:#000000CC;z-index:500;display:none;align-items:flex-end;justify-content:center;}
+#modal-overlay.open{display:flex;}
+#modal-box{background:var(--surface);border:1px solid var(--border2);border-radius:20px 20px 0 0;padding:20px 18px 36px;width:100%;max-width:600px;max-height:92vh;overflow-y:auto;}
+.modal-handle{width:36px;height:4px;background:var(--border2);border-radius:2px;margin:0 auto 16px;}
+.modal-title{font-size:16px;font-weight:800;margin-bottom:16px;}
+/* ── FORM ── */
+.field{margin-bottom:13px;}
+.field label{font-size:10px;color:var(--muted);font-weight:700;letter-spacing:.5px;display:block;margin-bottom:5px;}
+.field input,.field select,.field textarea{width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:10px 13px;color:var(--text);outline:none;transition:border-color .2s;}
+.field input:focus,.field select:focus{border-color:var(--accent);}
+.field select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B6B8A' fill='none' stroke-width='2'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;}
+.field textarea{resize:vertical;min-height:56px;}
+.field input::placeholder{color:var(--muted);}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+.day-pill{padding:8px 4px;border-radius:6px;border:1px solid var(--border2);background:var(--bg);color:var(--muted);font-size:10px;font-weight:700;transition:all .15s;text-align:center;}
+.day-pill.on{background:var(--accent)22;border-color:var(--accent);color:var(--accent);}
+.color-dot{width:26px;height:26px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:transform .15s,border-color .15s;flex-shrink:0;}
+.color-dot.on{border-color:#fff;transform:scale(1.2);}
+.cat-pill{padding:6px 11px;border-radius:20px;border:1px solid var(--border2);background:var(--bg);color:var(--muted);font-size:11px;font-weight:600;transition:all .15s;white-space:nowrap;}
+.cat-pill.on{border-color:var(--accent);color:var(--accent);background:var(--accent)18;}
+.btn-primary{width:100%;padding:13px;background:var(--accent);border:none;border-radius:var(--radius-sm);color:#fff;font-weight:700;font-size:14px;margin-top:6px;}
+.btn-danger{width:100%;padding:11px;background:none;border:1px solid var(--red)44;border-radius:var(--radius-sm);color:var(--red);font-weight:600;font-size:13px;margin-top:8px;}
+.btn-sec{padding:9px 16px;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-sm);color:var(--muted);font-weight:600;font-size:12px;}
+.sep{border:none;border-top:1px solid var(--border);margin:16px 0;}
+.section-lbl{font-size:10px;color:var(--muted);font-weight:700;letter-spacing:.5px;margin-bottom:10px;}
+
+/* ══ DAY VIEW ══════════════════════════════════ */
+#day-header{padding:16px 14px 0;}
+.day-greeting{font-size:22px;font-weight:800;letter-spacing:-.5px;}
+.day-date{font-size:12px;color:var(--muted);margin-top:3px;}
+.day-progress-bar{background:var(--border);border-radius:4px;height:5px;margin:12px 0 4px;}
+.day-progress-fill{height:100%;border-radius:4px;background:var(--accent);transition:width .5s;}
+.day-progress-lbl{font-size:10px;color:var(--muted);display:flex;justify-content:space-between;}
+
+/* Timeline */
+#timeline{padding:14px 14px 0;position:relative;}
+.timeline-wrap{position:relative;padding-left:52px;}
+.time-axis{position:absolute;left:0;top:0;bottom:0;width:44px;}
+.time-tick{position:absolute;right:8px;font-size:9px;color:var(--muted);transform:translateY(-50%);font-weight:600;white-space:nowrap;}
+.axis-line{position:absolute;left:43px;top:0;bottom:0;width:1px;background:var(--border);}
+.now-line{position:absolute;left:43px;right:-14px;height:2px;background:var(--red);z-index:10;}
+.now-dot{position:absolute;left:39px;width:9px;height:9px;border-radius:50%;background:var(--red);top:-3.5px;}
+.now-label{position:absolute;left:50px;top:-8px;font-size:9px;color:var(--red);font-weight:800;}
+
+/* Task blocks on timeline */
+.tl-block{
+  position:absolute;left:0;right:0;border-radius:8px;
+  padding:5px 9px;overflow:hidden;cursor:pointer;
+  border-left:3px solid var(--c);
+  transition:opacity .15s;
+}
+.tl-block:active{opacity:.8;}
+.tl-block-name{font-size:11px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tl-block-time{font-size:9px;opacity:.8;margin-top:1px;}
+.tl-block-timer{font-size:10px;font-weight:800;font-variant-numeric:tabular-nums;margin-top:2px;}
+
+/* Active banner */
+#active-banner{margin:0 14px 12px;border-radius:var(--radius);padding:13px 15px;display:none;}
+#active-banner.on{display:flex;justify-content:space-between;align-items:center;}
+
+/* Unscheduled section */
+.unsched-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 15px;margin-bottom:9px;display:flex;align-items:center;gap:10px;}
+.unsched-icon{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;}
+.unsched-info{flex:1;min-width:0;}
+.unsched-name{font-weight:700;font-size:13px;}
+.unsched-meta{font-size:10px;color:var(--muted);margin-top:2px;}
+
+/* Today task card (below timeline) */
+.today-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 15px;margin-bottom:9px;transition:border-color .2s;}
+.today-card.running{border-color:var(--c);}
+.today-card-head{display:flex;align-items:center;gap:10px;}
+.today-icon{width:38px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.today-info{flex:1;min-width:0;}
+.today-name{font-weight:700;font-size:14px;}
+.today-slot{font-size:10px;margin-top:2px;}
+.today-progress{margin-top:8px;}
+.today-prog-wrap{background:var(--border);border-radius:3px;height:3px;margin-top:5px;}
+.today-prog-fill{height:100%;border-radius:3px;transition:width .4s;}
+.today-actions{display:flex;gap:6px;align-items:center;flex-shrink:0;}
+.btn-start{padding:7px 12px;border:1px solid var(--c)44;border-radius:7px;background:var(--c)18;color:var(--c);font-weight:700;font-size:11px;}
+.btn-stop{padding:7px 12px;border:none;border-radius:7px;background:var(--c);color:#fff;font-weight:700;font-size:11px;}
+.btn-edit-sm{background:none;border:none;color:var(--muted);font-size:15px;padding:4px 5px;}
+
+/* ══ DASHBOARD ══ */
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+.stat-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:13px 14px;}
+.stat-label{font-size:9px;color:var(--muted);font-weight:700;letter-spacing:.4px;margin-bottom:4px;}
+.stat-val{font-size:20px;font-weight:800;}
+.stat-sub{font-size:10px;color:var(--muted);margin-top:2px;}
+.alert-box{border-radius:var(--radius-sm);padding:11px 13px;margin-bottom:8px;display:flex;align-items:flex-start;gap:10px;}
+.alert-box.warn{background:#FFB34718;border:1px solid #FFB34744;}
+.alert-box.danger{background:#FF6B6B18;border:1px solid #FF6B6B44;}
+.alert-box.good{background:#43D9A318;border:1px solid #43D9A344;}
+.alert-icon{font-size:16px;flex-shrink:0;margin-top:1px;}
+.alert-text{font-size:12px;line-height:1.5;}
+.alert-text strong{font-weight:700;display:block;margin-bottom:1px;}
+.cat-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.cat-label{font-size:11px;font-weight:600;width:80px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.cat-bar-wrap{flex:1;background:var(--border);border-radius:4px;height:7px;}
+.cat-bar-fill{height:100%;border-radius:4px;}
+.cat-time{font-size:10px;color:var(--muted);width:34px;text-align:right;flex-shrink:0;}
+.proj-box{background:linear-gradient(135deg,var(--accent)18,var(--accent)08);border:1px solid var(--accent)33;border-radius:var(--radius);padding:14px 16px;margin-bottom:10px;}
+.proj-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);}
+.proj-row:last-child{border-bottom:none;}
+.streak-grid{display:flex;gap:3px;flex-wrap:wrap;margin-top:8px;}
+.streak-day{width:22px;height:22px;border-radius:5px;background:var(--border);font-size:8px;color:var(--muted);display:flex;align-items:center;justify-content:center;font-weight:700;}
+.streak-day.done{background:var(--green)33;color:var(--green);}
+.streak-day.partial{background:var(--yellow)33;color:var(--yellow);}
+.streak-day.missed{background:var(--red)1A;color:var(--red)44;}
+.streak-day.today{border:1px solid var(--accent);}
+
+/* ══ RECAP ══ */
+.week-scroller{display:flex;gap:7px;overflow-x:auto;padding-bottom:5px;margin-bottom:14px;scrollbar-width:none;}
+.week-scroller::-webkit-scrollbar{display:none;}
+.week-chip{padding:6px 13px;border-radius:20px;border:1px solid var(--border2);background:var(--bg);color:var(--muted);font-size:11px;font-weight:700;white-space:nowrap;flex-shrink:0;}
+.week-chip.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+.recap-row{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:13px 15px;margin-bottom:9px;}
+.day-bars{display:flex;gap:3px;margin-top:8px;}
+.day-col{flex:1;text-align:center;}
+.day-bar-bg{background:var(--border);border-radius:3px;margin-bottom:3px;height:36px;display:flex;align-items:flex-end;overflow:hidden;}
+.day-bar-fill{width:100%;border-radius:3px;}
+.day-lbl{font-size:9px;color:var(--muted);}
+.day-lbl.today{color:var(--text);font-weight:700;}
+
+/* ══ HISTORY ══ */
+.hist-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:13px 15px;margin-bottom:9px;}
+.hist-tag{padding:3px 9px;border-radius:12px;font-size:10px;font-weight:700;}
+.empty{text-align:center;padding:50px 20px;color:var(--muted);}
+.empty .emoji{font-size:40px;margin-bottom:12px;}
+.empty p{font-size:13px;line-height:1.7;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:10px;}
+
+/* ══ SESSION SUMMARY MODAL ══ */
+#session-overlay{position:fixed;inset:0;background:#000000DD;z-index:800;display:none;align-items:flex-end;justify-content:center;}
+#session-overlay.open{display:flex;}
+#session-box{background:var(--surface);border:1px solid var(--border2);border-radius:20px 20px 0 0;padding:22px 20px 40px;width:100%;max-width:600px;max-height:85vh;overflow-y:auto;}
+
+/* ══ CELEBRATION OVERLAY ══ */
+#celebration-overlay{position:fixed;inset:0;z-index:900;display:none;flex-direction:column;align-items:center;justify-content:center;background:#000000EE;text-align:center;padding:30px;}
+#celebration-overlay.open{display:flex;}
+.confetti-wrap{position:absolute;inset:0;overflow:hidden;pointer-events:none;}
+.confetti-piece{position:absolute;width:10px;height:10px;border-radius:2px;animation:fall linear forwards;}
+@keyframes fall{0%{transform:translateY(-20px) rotate(0deg);opacity:1;}100%{transform:translateY(110vh) rotate(720deg);opacity:0;}}
+.celeb-emoji{font-size:72px;margin-bottom:16px;animation:pop .4s cubic-bezier(.34,1.56,.64,1);}
+@keyframes pop{0%{transform:scale(0);}100%{transform:scale(1);}}
+.celeb-title{font-size:26px;font-weight:800;letter-spacing:-.5px;margin-bottom:8px;}
+.celeb-sub{font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:24px;}
+.celeb-stat{font-size:32px;font-weight:800;margin-bottom:4px;}
+.celeb-stat-lbl{font-size:11px;color:var(--muted);margin-bottom:20px;}
+</style>
+</head>
+<body>
+<div id="toast"></div>
+
+<!-- SESSION SUMMARY -->
+<div id="session-overlay">
+  <div id="session-box">
+    <div class="modal-handle"></div>
+    <div id="session-content"></div>
+  </div>
+</div>
+
+<!-- CELEBRATION -->
+<div id="celebration-overlay">
+  <div class="confetti-wrap" id="confetti-wrap"></div>
+  <div id="celeb-content"></div>
+</div>
+<div id="modal-overlay">
+  <div id="modal-box">
+    <div class="modal-handle"></div>
+    <div id="modal-title" class="modal-title"></div>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<div id="header">
+  <div><div class="logo">⏱ Time<span>Flow</span></div></div>
+  <div id="live-clock" style="font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums;font-weight:600;"></div>
+</div>
+
+<div id="day-header"></div>
+<div id="active-banner"></div>
+<div style="max-width:600px;margin:0 auto;">
+  <div id="timeline"></div>
+  <div id="page-content" style="padding:0 14px;"></div>
+</div>
+
+<button id="fab" onclick="openAddModal()">+</button>
+
+<nav id="bottom-nav">
+  <button class="nav-btn active" onclick="switchTab('tracker')" id="nav-tracker"><span class="icon">🗓️</span>Journée</button>
+  <button class="nav-btn" onclick="switchTab('progress')" id="nav-progress"><span class="icon">📈</span>Progression</button>
+  <button class="nav-btn" onclick="switchTab('dashboard')" id="nav-dashboard"><span class="icon">📊</span>Dashboard</button>
+  <button class="nav-btn" onclick="switchTab('recap')" id="nav-recap"><span class="icon">📅</span>Récap</button>
+  <button class="nav-btn" onclick="switchTab('history')" id="nav-history"><span class="icon">🗂️</span>Historique</button>
+</nav>
+
+<script>
+// ════════════════════════════════════════════
+// CONSTANTS
+// ════════════════════════════════════════════
+const SK='timeflow_pro_v2';
+const COLORS=['#6C63FF','#FF6B6B','#43D9A3','#FFB347','#4FC3F7','#F06292','#AED581','#FF8A65','#BA68C8','#4DB6AC'];
+const DAYS=['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
+const DAYS_FULL=['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'];
+const MONTHS=['jan','fév','mar','avr','mai','juin','juil','août','sep','oct','nov','déc'];
+const CATS=['💼 Travail','🔧 Métier','🚀 Projets','💪 Santé','📚 Formation','🏠 Perso'];
+const EMOJIS=['⏱','🔧','💼','🚀','📚','💪','🏃','🎯','💡','🎸','🙏','🌿','💰','🏠','✍️','🎓','🔨','🛠️','📱','🎵'];
+const RECURRENCES=['Quotidienne','Hebdomadaire','Tous les 2 jours','Tous les 3 jours','Pas de répétition'];
+const UNIT_TYPES=[
+  {id:'none',     label:'Heures seulement',   icon:'⏱', unit:'',          plural:''},
+  {id:'pages',    label:'Pages (livre)',       icon:'📖', unit:'page',      plural:'pages'},
+  {id:'modules',  label:'Modules (formation)', icon:'🎓', unit:'module',    plural:'modules'},
+  {id:'exercices',label:'Exercices',           icon:'✏️', unit:'exercice',  plural:'exercices'},
+  {id:'custom',   label:'Personnalisé',        icon:'🔢', unit:'',          plural:''},
+];
+const notifOK=typeof Notification!=='undefined';
+let notifGranted=notifOK&&Notification.permission==='granted';
+
+// ════════════════════════════════════════════
+// UTILS
+// ════════════════════════════════════════════
+const pad=n=>String(n).padStart(2,'0');
+const fmt=s=>`${pad(Math.floor(s/3600))}:${pad(Math.floor((s%3600)/60))}:${pad(s%60)}`;
+function fmtS(s){const h=Math.floor(s/3600),m=Math.floor((s%3600)/60);if(h>0&&m>0)return`${h}h ${m}m`;if(h>0)return`${h}h`;return`${m}m`;}
+function getDay(){const d=new Date().getDay();return d===0?6:d-1;}
+function getWeekKey(date=new Date()){
+  const s=new Date(date);s.setDate(s.getDate()-(s.getDay()===0?6:s.getDay()-1));s.setHours(0,0,0,0);
+  return s.toISOString().slice(0,10);
+}
+function weekLabel(wk){if(!wk)return'';const d=new Date(wk);return`Sem. ${d.getDate()} ${MONTHS[d.getMonth()]}`;}
+function totalFor(actId,sessions){return sessions.filter(s=>s.activityId===actId).reduce((a,s)=>a+s.duration,0);}
+function totalForDay(actId,day,sessions){return sessions.filter(s=>s.activityId===actId&&s.day===day).reduce((a,s)=>a+s.duration,0);}
+function timeToMin(t){if(!t)return null;const[h,m]=t.split(':').map(Number);return h*60+m;}
+function minToTime(m){return`${pad(Math.floor(m/60))}:${pad(m%60)}`;}
+function getStreak(actId){
+  const act=DB.activities.find(a=>a.id===actId);if(!act||!act.days||!act.days.length)return 0;
+  let streak=0;const today=new Date();today.setHours(0,0,0,0);
+  for(let i=0;i<60;i++){
+    const d=new Date(today);d.setDate(d.getDate()-i);
+    const di=d.getDay()===0?6:d.getDay()-1;
+    if(!act.days.includes(di))continue;
+    const wk=getWeekKey(d);
+    const done=DB.sessions.filter(s=>s.activityId===actId&&s.weekKey===wk&&s.day===di).reduce((a,s)=>a+s.duration,0);
+    if(done>=300)streak++;else break;
+  }
+  return streak;
+}
+function getLast30(actId){
+  const r=[];const today=new Date();today.setHours(0,0,0,0);
+  for(let i=29;i>=0;i--){
+    const d=new Date(today);d.setDate(d.getDate()-i);
+    const di=d.getDay()===0?6:d.getDay()-1;
+    const wk=getWeekKey(d);
+    const done=DB.sessions.filter(s=>s.activityId===actId&&s.weekKey===wk&&s.day===di).reduce((a,s)=>a+s.duration,0);
+    const act=DB.activities.find(a=>a.id===actId);
+    r.push({date:d,dayIdx:di,done,scheduled:act?.days?.includes(di)});
+  }
+  return r;
+}
+function getProjection(act){
+  if(!act.goalLongTermHours)return null;
+  const done=DB.sessions.filter(s=>s.activityId===act.id).reduce((a,s)=>a+s.duration,0)/3600;
+  const remaining=act.goalLongTermHours-done;
+  if(remaining<=0)return{done:true};
+  const wkGoal=act.goalHours||1;
+  const weeksLeft=remaining/wkGoal;
+  const target=new Date();target.setDate(target.getDate()+Math.ceil(weeksLeft*7));
+  return{done:false,date:target,weeks:Math.ceil(weeksLeft),pct:Math.round((done/act.goalLongTermHours)*100),totalDone:Math.round(done),remaining:Math.round(remaining)};
+}
+
+// ════════════════════════════════════════════
+// DATA
+// ════════════════════════════════════════════
+function load(){try{const r=localStorage.getItem(SK);if(r)return JSON.parse(r);}catch{}return{activities:[],sessions:[]};}
+function save(){try{localStorage.setItem(SK,JSON.stringify(DB));}catch{}}
+let DB=load();
+
+// ════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════
+let activeTimer=null;
+let elapsed=0;
+let timerInterval=null;
+let currentTab='tracker';
+let displayedWeek=null;
+let editActId=null;
+let newActData={color:COLORS[0],emoji:'⏱',days:[1,2,3,4,5],category:'💼 Travail',recurrence:'Quotidienne'};
+
+// ════════════════════════════════════════════
+// TOAST
+// ════════════════════════════════════════════
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2500);}
+
+// ════════════════════════════════════════════
+// MODAL
+// ════════════════════════════════════════════
+function openModal(title,html){
+  document.getElementById('modal-title').textContent=title;
+  document.getElementById('modal-body').innerHTML=html;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+function closeModal(){document.getElementById('modal-overlay').classList.remove('open');}
+document.getElementById('modal-overlay').addEventListener('click',function(e){if(e.target===this)closeModal();});
+
+// ════════════════════════════════════════════
+// CLOCK
+// ════════════════════════════════════════════
+setInterval(()=>{
+  const n=new Date();
+  document.getElementById('live-clock').textContent=`${pad(n.getHours())}:${pad(n.getMinutes())}`;
+  if(currentTab==='tracker') renderTimeline();
+},30000);
+(()=>{const n=new Date();document.getElementById('live-clock').textContent=`${pad(n.getHours())}:${pad(n.getMinutes())}`;})();
+
+// ════════════════════════════════════════════
+// TIMER
+// ════════════════════════════════════════════
+function startTimer(actId){
+  if(activeTimer)stopTimer();
+  activeTimer={activityId:actId,startTime:Date.now()};
+  clearInterval(timerInterval);
+  timerInterval=setInterval(()=>{
+    elapsed=Math.floor((Date.now()-activeTimer.startTime)/1000);
+    // update banner timer only
+    const bt=document.getElementById('banner-timer');if(bt)bt.textContent=fmt(elapsed);
+    const tbt=document.getElementById(`tl-timer-${actId}`);if(tbt)tbt.textContent=fmt(elapsed);
+    if(elapsed>0&&elapsed%3600===0&&notifGranted){
+      const act=DB.activities.find(a=>a.id===actId);
+      if(act)new Notification('⏱ TimeFlow',{body:`${elapsed/3600}h sur ${act.emoji} ${act.name} !`});
+    }
+  },1000);
+  const act=DB.activities.find(a=>a.id===actId);
+  toast(`▶ ${act?.emoji} ${act?.name} démarré`);
+  renderBanner();render();
+}
+function stopTimer(){
+  if(!activeTimer)return;
+  const dur=Math.floor((Date.now()-activeTimer.startTime)/1000);
+  const actId=activeTimer.activityId;
+  clearInterval(timerInterval);
+
+  if(dur<30){
+    toast('⚠️ Session trop courte (< 30s)');
+    activeTimer=null;elapsed=0;
+    renderBanner();render();
+    return;
+  }
+
+  // Save session
+  const session={id:Date.now().toString(),activityId:actId,duration:dur,day:getDay(),date:new Date().toISOString(),weekKey:getWeekKey()};
+  DB.sessions.push(session);
+  save();
+
+  const act=DB.activities.find(a=>a.id===actId);
+  activeTimer=null;elapsed=0;
+  renderBanner();render();
+
+  // If activity uses units → ask for progress first
+  if(act&&act.unitType&&act.unitType!=='none'){
+    showUnitPrompt(act,session,dur);
+  } else {
+    finishSession(act,session,dur,0);
+  }
+}
+
+// ════════════════════════════════════════════
+// UNIT PROGRESS PROMPT
+// ════════════════════════════════════════════
+function showUnitPrompt(act,session,dur){
+  // Store pending session globally to avoid JSON in onclick
+  window._pendingSession={act,session,dur};
+  const unitLabel=getUnitLabel(act,true);
+  const done=getUnitDone(act);
+  const goal=act.goalUnits||null;
+  const ut=UNIT_TYPES.find(u=>u.id===act.unitType);
+
+  const html=`
+    <div style="text-align:center;margin-bottom:20px;">
+      <div style="font-size:40px;margin-bottom:8px;">${ut?.icon||'📊'}</div>
+      <div style="font-size:16px;font-weight:800;">Session terminée !</div>
+      <div style="font-size:13px;color:var(--muted);margin-top:4px;">${fmtS(session.duration)} sur <strong>${act.emoji} ${act.name}</strong></div>
+    </div>
+
+    <div style="background:var(--bg);border:1px solid var(--border2);border-radius:12px;padding:16px;margin-bottom:16px;">
+      <div style="font-size:11px;color:var(--muted);font-weight:700;margin-bottom:10px;">COMBIEN DE ${unitLabel.toUpperCase()} AS-TU COMPLÉTÉ CETTE SESSION ?</div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <button onclick="adjustUnits(-1)" style="width:44px;height:44px;border-radius:50%;border:1px solid var(--border2);background:var(--bg);color:var(--text);font-size:22px;font-weight:700;flex-shrink:0;">−</button>
+        <input type="number" id="unit-input" value="0" min="0" step="1"
+          style="flex:1;text-align:center;font-size:28px;font-weight:800;color:${act.color};background:var(--bg);border:1px solid ${act.color}44;border-radius:10px;padding:10px;outline:none;"/>
+        <button onclick="adjustUnits(1)" style="width:44px;height:44px;border-radius:50%;border:1px solid var(--border2);background:var(--bg);color:var(--text);font-size:22px;font-weight:700;flex-shrink:0;">+</button>
+      </div>
+      <div style="text-align:center;margin-top:8px;font-size:11px;color:var(--muted);">${unitLabel} cette session</div>
+    </div>
+
+    ${goal?`<div style="background:var(--bg);border:1px solid var(--border2);border-radius:10px;padding:12px 14px;margin-bottom:14px;">
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:6px;">
+        <span>Progression actuelle</span><span>${done} / ${goal} ${unitLabel}</span>
+      </div>
+      <div style="background:var(--border);border-radius:4px;height:6px;overflow:hidden;">
+        <div style="height:100%;width:${Math.min(100,Math.round((done/goal)*100))}%;background:${act.color};border-radius:4px;"></div>
+      </div>
+    </div>`:''}
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+      <button onclick="confirmUnits(false)"
+        style="padding:13px;background:${act.color};border:none;border-radius:10px;color:#fff;font-weight:700;font-size:14px;">
+        ✅ Confirmer
+      </button>
+      <button onclick="confirmUnits(true)"
+        style="padding:13px;background:var(--surface2);border:1px solid var(--border2);border-radius:10px;color:var(--muted);font-weight:600;font-size:13px;">
+        Passer
+      </button>
+    </div>
+  `;
+  openModal(`${ut?.icon||'📊'} Progression`,html);
+}
+
+function adjustUnits(delta){
+  const inp=document.getElementById('unit-input');
+  if(!inp)return;
+  inp.value=Math.max(0,(parseInt(inp.value)||0)+delta);
+}
+
+function confirmUnits(skip=false){
+  const pending=window._pendingSession;
+  if(!pending)return;
+  const {act,session}=pending;
+  window._pendingSession=null;
+  const unitsAdded=skip?0:(parseInt(document.getElementById('unit-input')?.value)||0);
+  // Update session units in DB
+  const idx=DB.sessions.findIndex(s=>s.id===session.id);
+  if(idx>=0) DB.sessions[idx].unitsAdded=unitsAdded;
+  save();
+  closeModal();
+  finishSession(act,session,session.duration,unitsAdded);
+}
+
+function finishSession(act,session,dur,unitsAdded){
+  const cwkSess=DB.sessions.filter(s=>s.weekKey===getWeekKey());
+  const totalWkSec=totalFor(act.id,cwkSess);
+  const totalAllSec=DB.sessions.filter(s=>s.activityId===act.id).reduce((a,s)=>a+s.duration,0);
+  const prevWkSec=totalWkSec-dur;
+  const prevAllSec=totalAllSec-dur;
+  const goalWkSec=act?.goalHours?act.goalHours*3600:null;
+  const goalLtSec=act?.goalLongTermHours?act.goalLongTermHours*3600:null;
+
+  // Check unit milestone
+  const totalUnitsDone=act.goalUnits?getUnitDone(act):null;
+  const hitUnits=totalUnitsDone!==null&&totalUnitsDone>=act.goalUnits&&(totalUnitsDone-unitsAdded)<act.goalUnits;
+  const hitWeekly=goalWkSec&&prevWkSec<goalWkSec&&totalWkSec>=goalWkSec;
+  const hitLongTerm=goalLtSec&&prevAllSec<goalLtSec&&totalAllSec>=goalLtSec;
+
+  if(hitUnits||hitLongTerm){
+    showSessionSummary(act,session,cwkSess,totalWkSec,totalAllSec,unitsAdded,()=>showCelebration('longterm',act,totalAllSec));
+  } else if(hitWeekly){
+    showSessionSummary(act,session,cwkSess,totalWkSec,totalAllSec,unitsAdded,()=>showCelebration('weekly',act,totalWkSec));
+  } else {
+    showSessionSummary(act,session,cwkSess,totalWkSec,totalAllSec,unitsAdded,null);
+  }
+}
+
+// ════════════════════════════════════════════
+// SESSION SUMMARY
+// ════════════════════════════════════════════
+function showSessionSummary(act,session,cwkSess,totalWkSec,totalAllSec,unitsAdded,onClose){
+  const goalWkSec=act.goalHours?act.goalHours*3600:null;
+  const goalLtSec=act.goalLongTermHours?act.goalLongTermHours*3600:null;
+  const goalWkPct=goalWkSec?Math.min(100,Math.round((totalWkSec/goalWkSec)*100)):null;
+  const goalLtPct=goalLtSec?Math.min(100,Math.round((totalAllSec/goalLtSec)*100)):null;
+  const totalLtH=Math.round(totalAllSec/3600*10)/10;
+  const proj=goalLtSec?getProjection(act):null;
+  const streak=getStreak(act.id);
+
+  // Motivational message based on session duration
+  const mins=Math.floor(session.duration/60);
+  let motivation='';
+  if(mins>=120) motivation='💪 Excellente session ! Plus de 2 heures de concentration.';
+  else if(mins>=60) motivation='🎯 Bonne heure de travail. La régularité paie.';
+  else if(mins>=30) motivation='✅ Session solide. Chaque minute compte.';
+  else motivation='⚡ Court mais fait ! Mieux vaut peu que rien.';
+
+  const html=`
+    <!-- En-tête activité -->
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+      <div style="width:48px;height:48px;border-radius:13px;background:${act.color}22;border:1px solid ${act.color}44;display:flex;align-items:center;justify-content:center;font-size:24px;">${act.emoji}</div>
+      <div>
+        <div style="font-size:16px;font-weight:800;">Session terminée ✓</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px;">${act.name}</div>
+      </div>
+    </div>
+
+    <!-- Durée principale -->
+    <div style="text-align:center;background:${act.color}14;border:1px solid ${act.color}33;border-radius:14px;padding:20px;margin-bottom:16px;">
+      <div style="font-size:11px;color:${act.color};font-weight:700;letter-spacing:.5px;margin-bottom:6px;">DURÉE DE LA SESSION</div>
+      <div style="font-size:48px;font-weight:800;color:${act.color};letter-spacing:-1px;">${fmtS(session.duration)}</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:6px;">${motivation}</div>
+      ${streak>1?`<div style="font-size:12px;color:var(--yellow);font-weight:700;margin-top:8px;">🔥 Streak : ${streak} jours consécutifs</div>`:''}
+    </div>
+
+    <!-- Progression hebdo -->
+    ${goalWkSec?`<div style="background:var(--bg);border:1px solid var(--border2);border-radius:12px;padding:13px 15px;margin-bottom:10px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <div style="font-size:11px;font-weight:700;color:var(--muted)">📅 OBJECTIF SEMAINE</div>
+        <div style="font-size:13px;font-weight:800;color:${goalWkPct>=100?'var(--green)':act.color}">${goalWkPct}%</div>
+      </div>
+      <div style="background:var(--border);border-radius:5px;height:8px;margin-bottom:7px;overflow:hidden;">
+        <div style="height:100%;width:${goalWkPct}%;background:${goalWkPct>=100?'var(--green)':act.color};border-radius:5px;transition:width .6s;"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);">
+        <span>${fmtS(totalWkSec)} faits</span>
+        <span>${goalWkPct>=100?'✅ Objectif atteint !':fmtS(goalWkSec-totalWkSec)+' restants'}</span>
+        <span>${act.goalHours}h objectif</span>
+      </div>
+    </div>`:''}
+
+    <!-- Progression long terme -->
+    ${goalLtSec?`<div style="background:var(--bg);border:1px solid var(--border2);border-radius:12px;padding:13px 15px;margin-bottom:10px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <div style="font-size:11px;font-weight:700;color:var(--muted)">🚀 OBJECTIF LONG TERME</div>
+        <div style="font-size:13px;font-weight:800;color:${goalLtPct>=100?'var(--green)':act.color}">${goalLtPct}%</div>
+      </div>
+      <div style="background:var(--border);border-radius:5px;height:8px;margin-bottom:7px;overflow:hidden;">
+        <div style="height:100%;width:${goalLtPct}%;background:${goalLtPct>=100?'var(--green)':act.color};border-radius:5px;transition:width .6s;"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);">
+        <span>${totalLtH}h faites</span>
+        <span>${goalLtPct>=100?'🏆 Accompli !':Math.round(act.goalLongTermHours-totalLtH*10)/10+'h restantes'}</span>
+        <span>${act.goalLongTermHours}h total</span>
+      </div>
+      ${proj&&!proj.done?`<div style="font-size:10px;color:var(--muted);margin-top:6px;text-align:center;">📅 Fin estimée : <strong style="color:${act.color}">${proj.date.toLocaleDateString('fr-FR',{month:'long',year:'numeric'})}</strong> · encore ${proj.weeks} sem.</div>`:''}
+    </div>`:''}
+
+    <!-- Progression en unités -->
+    \${act.unitType&&act.unitType!=='none'?((()=>{
+      const unitDone=getUnitDone(act);
+      const unitGoal=act.goalUnits||null;
+      const unitLabel=getUnitLabel(act,true);
+      const unitPct=unitGoal?Math.min(100,Math.round((unitDone/unitGoal)*100)):null;
+      const ut=UNIT_TYPES.find(u=>u.id===act.unitType);
+      return`<div style="background:var(--bg);border:1px solid var(--border2);border-radius:12px;padding:13px 15px;margin-bottom:10px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <div style="font-size:11px;font-weight:700;color:var(--muted)">\${ut?.icon||'📊'} \${unitLabel.toUpperCase()}</div>
+          \${unitsAdded>0?`<div style="font-size:12px;font-weight:700;color:\${act.color}">+\${unitsAdded} \${unitLabel} cette session</div>`:''}
+        </div>
+        \${unitGoal?`
+          <div style="background:var(--border);border-radius:5px;height:8px;margin-bottom:7px;overflow:hidden;">
+            <div style="height:100%;width:\${unitPct}%;background:\${unitPct>=100?'var(--green)':act.color};border-radius:5px;transition:width .6s;"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);">
+            <span>\${unitDone} \${unitLabel} faits</span>
+            <span>\${unitPct>=100?'✅ Terminé !':((unitGoal-unitDone)+' restants')}</span>
+            <span>/ \${unitGoal}</span>
+          </div>
+        `:``}
+      </div>`;
+    })()):''}
+
+    <!-- Bouton fermer -->
+    <button onclick="closeSessionSummary()" style="width:100%;padding:13px;background:var(--accent);border:none;border-radius:10px;color:#fff;font-weight:700;font-size:14px;margin-top:6px;">
+      Continuer 💪
+    </button>
+  `;
+
+  document.getElementById('session-content').innerHTML=html;
+  document.getElementById('session-overlay').classList.add('open');
+
+  // Store onClose callback
+  window._sessionOnClose=onClose||null;
+}
+
+function closeSessionSummary(){
+  document.getElementById('session-overlay').classList.remove('open');
+  if(window._sessionOnClose){
+    setTimeout(()=>{window._sessionOnClose();window._sessionOnClose=null;},200);
+  }
+}
+
+// Close session on overlay tap
+document.getElementById('session-overlay').addEventListener('click',function(e){
+  if(e.target===this)closeSessionSummary();
+});
+
+// ════════════════════════════════════════════
+// CELEBRATION
+// ════════════════════════════════════════════
+function showCelebration(type,act,totalSec){
+  const isLT=type==='longterm';
+  const totalH=Math.round(totalSec/3600*10)/10;
+
+  const content=isLT?`
+    <div class="celeb-emoji">🏆</div>
+    <div class="celeb-title" style="color:var(--green)">Objectif long terme<br>accompli !</div>
+    <div class="celeb-stat" style="color:${act.color}">${totalH}h</div>
+    <div class="celeb-stat-lbl">sur ${act.goalLongTermHours}h — 100% complété</div>
+    <div class="celeb-sub">${act.emoji} <strong>${act.name}</strong><br>Tu as atteint ton objectif !<br>C'est le résultat de ta régularité.</div>
+    <button onclick="closeCelebration()" style="padding:14px 40px;background:var(--green);border:none;border-radius:12px;color:#000;font-weight:800;font-size:15px;">🎉 Merci Seigneur !</button>
+  `:`
+    <div class="celeb-emoji">🎯</div>
+    <div class="celeb-title" style="color:${act.color}">Objectif<br>de la semaine atteint !</div>
+    <div class="celeb-stat" style="color:${act.color}">${fmtS(totalSec)}</div>
+    <div class="celeb-stat-lbl">/ ${act.goalHours}h cette semaine — 100% ✓</div>
+    <div class="celeb-sub">${act.emoji} <strong>${act.name}</strong><br>Belle semaine productive !<br>La discipline construit la destinée.</div>
+    <button onclick="closeCelebration()" style="padding:14px 40px;background:${act.color};border:none;border-radius:12px;color:#fff;font-weight:800;font-size:15px;">🙌 Super !</button>
+  `;
+
+  document.getElementById('celeb-content').innerHTML=content;
+  launchConfetti(act.color);
+  document.getElementById('celebration-overlay').classList.add('open');
+}
+
+function closeCelebration(){
+  document.getElementById('celebration-overlay').classList.remove('open');
+  document.getElementById('confetti-wrap').innerHTML='';
+}
+
+function launchConfetti(accentColor){
+  const wrap=document.getElementById('confetti-wrap');
+  wrap.innerHTML='';
+  const colors=[accentColor,'#43D9A3','#FFB347','#FF6B6B','#4FC3F7','#F06292','#ffffff'];
+  for(let i=0;i<60;i++){
+    const el=document.createElement('div');
+    el.className='confetti-piece';
+    const size=Math.random()*10+5;
+    el.style.cssText=`
+      left:${Math.random()*100}%;
+      width:${size}px;height:${size}px;
+      background:${colors[Math.floor(Math.random()*colors.length)]};
+      animation-duration:${Math.random()*2+1.5}s;
+      animation-delay:${Math.random()*0.8}s;
+      border-radius:${Math.random()>0.5?'50%':'2px'};
+      opacity:${Math.random()*0.7+0.3};
+    `;
+    wrap.appendChild(el);
+  }
+  // Auto clean after animation
+  setTimeout(()=>wrap.innerHTML='',4000);
+}
+
+// ════════════════════════════════════════════
+// BANNER
+// ════════════════════════════════════════════
+function renderBanner(){
+  const b=document.getElementById('active-banner');
+  if(!activeTimer){b.className='';b.innerHTML='';b.style='';return;}
+  const act=DB.activities.find(a=>a.id===activeTimer.activityId);
+  if(!act){b.className='';b.innerHTML='';return;}
+  const cwkSess=DB.sessions.filter(s=>s.weekKey===getWeekKey());
+  const done=totalFor(act.id,cwkSess)+elapsed;
+  const goalSec=act.goalHours?act.goalHours*3600:null;
+  const goalPct=goalSec?Math.min(100,Math.round((done/goalSec)*100)):null;
+  b.className='on';
+  b.style=`background:${act.color}18;border:1px solid ${act.color}55;border-radius:14px;padding:13px 15px;margin:0 14px 12px;display:flex;justify-content:space-between;align-items:center;`;
+  b.innerHTML=`
+    <div>
+      <div style="font-size:10px;color:${act.color};font-weight:800;margin-bottom:3px">● EN COURS</div>
+      <div style="font-weight:800;font-size:15px">${act.emoji} ${act.name}</div>
+      ${goalPct!==null?`<div style="font-size:10px;color:#888;margin-top:2px">Semaine : ${goalPct}% · ${fmtS(done)} / ${act.goalHours}h</div>`:''}
+    </div>
+    <div style="text-align:right">
+      <div id="banner-timer" style="font-size:26px;font-weight:800;font-variant-numeric:tabular-nums;color:${act.color}">${fmt(elapsed)}</div>
+      <button onclick="stopTimer()" style="margin-top:5px;padding:6px 14px;background:${act.color};border:none;border-radius:7px;color:#fff;font-weight:700;font-size:11px;width:100%;">■ Arrêter</button>
+    </div>`;
+}
+
+// ════════════════════════════════════════════
+// TIMELINE RENDERER
+// ════════════════════════════════════════════
+function renderTimeline(){
+  const tl=document.getElementById('timeline');
+  if(currentTab!=='tracker'){tl.innerHTML='';return;}
+
+  const now=new Date();
+  const today=getDay();
+  const cwkSess=DB.sessions.filter(s=>s.weekKey===getWeekKey());
+
+  // Get today's scheduled activities WITH a time slot
+  const todayTimed=DB.activities.filter(a=>{
+    if(!a.days||!a.days.includes(today))return false;
+    return a.timeStart&&a.timeEnd;
+  });
+
+  if(todayTimed.length===0){
+    tl.innerHTML='';
+    return;
+  }
+
+  // Timeline range: find min/max with padding
+  const allMins=todayTimed.map(a=>timeToMin(a.timeStart));
+  const allMaxs=todayTimed.map(a=>{
+    let end=timeToMin(a.timeEnd);
+    if(end<=timeToMin(a.timeStart))end+=1440; // past midnight
+    return end;
+  });
+  const tlStart=Math.max(0,Math.min(...allMins)-30);
+  const tlEnd=Math.min(1440,Math.max(...allMaxs)+30);
+  const tlDuration=tlEnd-tlStart;
+
+  // Current time position
+  const nowMin=now.getHours()*60+now.getMinutes();
+  const nowPct=Math.max(0,Math.min(100,((nowMin-tlStart)/tlDuration)*100));
+
+  // Height per minute (px)
+  const PX_PER_MIN=2.2;
+  const totalHeight=tlDuration*PX_PER_MIN;
+
+  // Build hour ticks
+  const startHour=Math.floor(tlStart/60);
+  const endHour=Math.ceil(tlEnd/60);
+  let ticksHTML='';
+  for(let h=startHour;h<=endHour;h++){
+    const pct=((h*60-tlStart)/tlDuration)*100;
+    if(pct<0||pct>100)continue;
+    ticksHTML+=`<div class="time-tick" style="top:${pct}%">${pad(h)}h</div>`;
+  }
+
+  // Build task blocks
+  let blocksHTML='';
+  todayTimed.forEach((act,i)=>{
+    const startMin=timeToMin(act.timeStart);
+    let endMin=timeToMin(act.timeEnd);
+    if(endMin<=startMin)endMin+=1440;
+    const topPct=((startMin-tlStart)/tlDuration)*100;
+    const heightPct=((endMin-startMin)/tlDuration)*100;
+    const isActive=activeTimer?.activityId===act.id;
+    const done=totalForDay(act.id,today,cwkSess)+(isActive?elapsed:0);
+    const durMin=(endMin-startMin);
+    const showTimer=isActive&&durMin>30;
+
+    // Multi-day badge
+    const endDateLabel=act.taskEndDate?` → ${new Date(act.taskEndDate).toLocaleDateString('fr-FR',{day:'numeric',month:'short'})}`:'';
+
+    blocksHTML+=`<div class="tl-block" style="top:${topPct}%;height:${Math.max(heightPct,3)}%;background:${act.color}22;--c:${act.color};${isActive?`border-left-color:${act.color};box-shadow:0 0 12px ${act.color}44;`:''}" onclick="startTimer('${act.id}')">
+      <div class="tl-block-name" style="color:${act.color}">${act.emoji} ${act.name}${endDateLabel}</div>
+      <div class="tl-block-time" style="color:${act.color}99">${act.timeStart} – ${act.timeEnd}${endMin>1440?' (+1j)':''}</div>
+      ${done>0?`<div style="font-size:9px;color:${act.color};margin-top:1px">✓ ${fmtS(done)}</div>`:''}
+      ${showTimer?`<div id="tl-timer-${act.id}" class="tl-block-timer" style="color:${act.color}">${fmt(elapsed)}</div>`:''}
+    </div>`;
+  });
+
+  // Now line
+  const nowLineHTML=nowMin>=tlStart&&nowMin<=tlEnd?`
+    <div class="now-line" style="top:${nowPct}%">
+      <div class="now-dot"></div>
+      <div class="now-label">${pad(now.getHours())}:${pad(now.getMinutes())}</div>
+    </div>`:'';
+
+  tl.innerHTML=`
+    <div class="section-lbl" style="padding:0 14px;margin-bottom:8px;">📅 PLANNING DU JOUR</div>
+    <div style="padding:0 14px;margin-bottom:14px;">
+      <div class="timeline-wrap" style="height:${totalHeight}px;min-height:120px;">
+        <div class="time-axis">${ticksHTML}</div>
+        <div class="axis-line"></div>
+        ${nowLineHTML}
+        ${blocksHTML}
+      </div>
+    </div>`;
+}
+
+// ════════════════════════════════════════════
+// ACTIVITY FORM
+// ════════════════════════════════════════════
+function openAddModal(actId=null){
+  editActId=actId;
+  const act=actId?DB.activities.find(a=>a.id===actId):null;
+  if(act){
+    newActData={color:act.color,emoji:act.emoji||'⏱',days:[...act.days||[1,2,3,4,5]],category:act.category||'💼 Travail',recurrence:act.recurrence||'Quotidienne',unitType:act.unitType||'none'};
+  }else{
+    newActData={color:COLORS[DB.activities.length%COLORS.length],emoji:'⏱',days:[1,2,3,4,5],category:'💼 Travail',recurrence:'Quotidienne',unitType:'none'};
+  }
+  openModal(act?'✏️ Modifier':'➕ Nouvelle activité',buildForm(act));
+}
+
+function buildForm(act=null){
+  return`
+  <!-- Emoji + Nom -->
+  <div class="two-col" style="margin-bottom:13px;align-items:end;">
+    <div class="field" style="margin:0"><label>ICÔNE</label>
+      <button onclick="openEmojiPicker()" style="width:100%;height:42px;background:var(--bg);border:1px solid var(--border2);border-radius:8px;font-size:22px;">${newActData.emoji}</button>
+    </div>
+    <div class="field" style="margin:0"><label>NOM</label>
+      <input id="f-name" placeholder="Ex: Plomberie UA488" value="${act?.name||''}"/>
+    </div>
+  </div>
+
+  <!-- Couleur -->
+  <div class="field"><label>COULEUR</label>
+    <div style="display:flex;gap:7px;flex-wrap:wrap;">
+      ${COLORS.map(c=>`<div class="color-dot${newActData.color===c?' on':''}" style="background:${c}" onclick="pickColor('${c}',this)"></div>`).join('')}
+    </div>
+  </div>
+
+  <!-- Catégorie -->
+  <div class="field"><label>CATÉGORIE</label>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;">
+      ${CATS.map(c=>`<button class="cat-pill${newActData.category===c?' on':''}" onclick="pickCat('${c}',this)">${c}</button>`).join('')}
+    </div>
+  </div>
+
+  <!-- Jours -->
+  <div class="field"><label>JOURS PLANIFIÉS</label>
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;">
+      ${DAYS.map((d,i)=>`<button class="day-pill${newActData.days.includes(i)?' on':''}" onclick="toggleDay(${i},this)">${d}</button>`).join('')}
+    </div>
+  </div>
+
+  <!-- Récurrence -->
+  <div class="field"><label>RÉCURRENCE</label>
+    <select id="f-recur">
+      ${RECURRENCES.map(r=>`<option${(act?.recurrence||'Quotidienne')===r?' selected':''}>${r}</option>`).join('')}
+    </select>
+  </div>
+
+  <hr class="sep"/>
+  <div class="section-lbl">🕐 PLAGE HORAIRE</div>
+
+  <!-- Horaires début/fin -->
+  <div class="two-col">
+    <div class="field"><label>HEURE DE DÉBUT</label><input type="time" id="f-start" value="${act?.timeStart||''}"/></div>
+    <div class="field"><label>HEURE DE FIN</label><input type="time" id="f-end" value="${act?.timeEnd||''}"/></div>
+  </div>
+
+  <!-- Date de fin si tâche longue -->
+  <div class="field">
+    <label>DATE DE FIN (si la tâche s'étale sur plusieurs jours)</label>
+    <input type="date" id="f-enddate" value="${act?.taskEndDate||''}" min="${new Date().toISOString().slice(0,10)}"/>
+    <div style="font-size:10px;color:var(--muted);margin-top:4px;">Laisse vide si la tâche se répète indéfiniment</div>
+  </div>
+
+  <hr class="sep"/>
+  <div class="section-lbl">📏 TYPE DE PROGRESSION</div>
+
+  <!-- Unit type picker -->
+  <div class="field"><label>COMMENT MESURER LA PROGRESSION ?</label>
+    <div style="display:flex;flex-direction:column;gap:6px;" id="unit-picker">
+      \${UNIT_TYPES.map(ut=>`
+        <button onclick="pickUnit('\${ut.id}',this)" class="unit-pill\${(act?.unitType||newActData.unitType||'none')===ut.id?' on':''}"
+          style="display:flex;align-items:center;gap:10px;padding:10px 13px;border-radius:9px;border:1px solid \${(act?.unitType||newActData.unitType||'none')===ut.id?'var(--accent)':'var(--border2)'};background:\${(act?.unitType||newActData.unitType||'none')===ut.id?'var(--accent)18':'var(--bg)'};color:\${(act?.unitType||newActData.unitType||'none')===ut.id?'var(--accent)':'var(--muted)'};text-align:left;width:100%;">
+          <span style="font-size:18px;">\${ut.icon}</span>
+          <span style="font-weight:600;font-size:13px;">\${ut.label}</span>
+        </button>
+      `).join('')}
+    </div>
+  </div>
+
+  <!-- Custom unit name (shown only if custom) -->
+  <div class="field" id="f-custom-unit-wrap" style="display:\${(act?.unitType||'none')==='custom'?'block':'none'}">
+    <label>NOM DE L'UNITÉ (singulier)</label>
+    <input id="f-custom-unit" placeholder="Ex: leçon, vidéo, problème..." value="\${act?.customUnit||''}"/>
+  </div>
+
+  <hr class="sep"/>
+  <div class="section-lbl">🎯 OBJECTIFS</div>
+
+  <!-- Heures -->
+  <div class="field"><label>OBJECTIF HEBDOMADAIRE (heures)</label>
+    <input type="number" id="f-goal-week" min="0.5" max="168" step="0.5" placeholder="Ex: 10h/semaine" value="\${act?.goalHours||''}"/>
+  </div>
+
+  <!-- Long terme heures -->
+  <div class="field"><label>OBJECTIF LONG TERME (heures totales)</label>
+    <input type="number" id="f-goal-lt" min="1" step="1" placeholder="Ex: 500h" value="\${act?.goalLongTermHours||''}"/>
+  </div>
+
+  <!-- Objectif en unités (affiché si unitType != none) -->
+  <div id="f-unit-goal-wrap" style="display:\${(act?.unitType&&act.unitType!=='none')?'block':'none'}">
+    <div class="field">
+      <label id="f-unit-goal-lbl">OBJECTIF TOTAL (\${act?.unitType==='custom'?act?.customUnit||'unités':(UNIT_TYPES.find(u=>u.id===(act?.unitType||'none'))?.plural||'unités')})</label>
+      <input type="number" id="f-goal-units" min="1" step="1" placeholder="Ex: 320 (pour un livre de 320 pages)" value="\${act?.goalUnits||''}"/>
+    </div>
+    <div class="field">
+      <label id="f-unit-done-lbl">DÉJÀ COMPLÉTÉ (\${act?.unitType==='custom'?act?.customUnit||'unités':(UNIT_TYPES.find(u=>u.id===(act?.unitType||'none'))?.plural||'unités')})</label>
+      <input type="number" id="f-done-units" min="0" step="1" placeholder="0 si tu commences maintenant" value="\${act?.doneUnits||''}"/>
+    </div>
+  </div>
+
+  <div class="field"><label>NOTE / MOTIVATION</label>
+    <textarea id="f-note" placeholder="Pourquoi cette activité est importante...">\${act?.note||''}</textarea>
+  </div>
+
+  <button class="btn-primary" onclick="saveActivity()">\${act?'Enregistrer':'Créer l\'activité'}</button>
+  \${act?`<button class="btn-danger" onclick="deleteActivity('\${act.id}')">🗑 Supprimer</button>`:''}
+  `;
+}
+
+function openEmojiPicker(){
+  openModal('😀 Icône',`<div style="display:flex;flex-wrap:wrap;gap:8px;">${EMOJIS.map(e=>`<button onclick="pickEmoji('${e}')" style="width:44px;height:44px;background:var(--bg);border:1px solid var(--border2);border-radius:8px;font-size:22px;">${e}</button>`).join('')}</div>`);
+}
+function pickEmoji(e){newActData.emoji=e;openAddModal(editActId);}
+function pickColor(c,el){newActData.color=c;document.querySelectorAll('.color-dot').forEach(d=>d.classList.remove('on'));el.classList.add('on');}
+function pickCat(c,el){newActData.category=c;document.querySelectorAll('.cat-pill').forEach(d=>d.classList.remove('on'));el.classList.add('on');}
+function toggleDay(i,el){
+  if(newActData.days.includes(i))newActData.days=newActData.days.filter(d=>d!==i);
+  else newActData.days.push(i);
+  el.classList.toggle('on');
+}
+
+function pickUnit(id,el){
+  newActData.unitType=id;
+  // Update pill styles
+  document.querySelectorAll('.unit-pill').forEach(p=>{
+    const isOn=p===el;
+    p.classList.toggle('on',isOn);
+    p.style.borderColor=isOn?'var(--accent)':'var(--border2)';
+    p.style.background=isOn?'var(--accent)18':'var(--bg)';
+    p.style.color=isOn?'var(--accent)':'var(--muted)';
+  });
+  // Show/hide custom unit input
+  const cw=document.getElementById('f-custom-unit-wrap');
+  if(cw) cw.style.display=id==='custom'?'block':'none';
+  // Show/hide unit goal fields
+  const uw=document.getElementById('f-unit-goal-wrap');
+  if(uw) uw.style.display=id!=='none'?'block':'none';
+  // Update labels
+  if(id!=='none'){
+    const ut=UNIT_TYPES.find(u=>u.id===id);
+    const lbl=id==='custom'?'unités':ut?.plural||'unités';
+    const gl=document.getElementById('f-unit-goal-lbl');
+    const dl=document.getElementById('f-unit-done-lbl');
+    if(gl) gl.textContent='OBJECTIF TOTAL ('+lbl+')';
+    if(dl) dl.textContent='DÉJÀ COMPLÉTÉ ('+lbl+')';
+  }
+}
+
+function getUnitLabel(act,plural=true){
+  if(!act.unitType||act.unitType==='none') return '';
+  if(act.unitType==='custom') return act.customUnit||'unités';
+  const ut=UNIT_TYPES.find(u=>u.id===act.unitType);
+  return plural?(ut?.plural||'unités'):(ut?.unit||'unité');
+}
+
+function getUnitDone(act){
+  // doneUnits = base (entered at creation) + all session unit progress
+  const sessionUnits=DB.sessions.filter(s=>s.activityId===act.id).reduce((a,s)=>a+(s.unitsAdded||0),0);
+  return (act.doneUnits||0)+sessionUnits;
+}
+
+function saveActivity(){
+  const name=document.getElementById('f-name').value.trim();
+  if(!name){toast('❌ Donne un nom à l\'activité');return;}
+  const unitType=newActData.unitType||'none';
+  const customUnit=document.getElementById('f-custom-unit')?document.getElementById('f-custom-unit').value.trim():'';
+  const goalUnits=unitType!=='none'?(parseFloat(document.getElementById('f-goal-units')?.value)||null):null;
+  const doneUnits=unitType!=='none'?(parseFloat(document.getElementById('f-done-units')?.value)||0):0;
+  const obj={
+    name,color:newActData.color,emoji:newActData.emoji,
+    days:[...newActData.days],category:newActData.category,
+    recurrence:document.getElementById('f-recur').value,
+    timeStart:document.getElementById('f-start').value||null,
+    timeEnd:document.getElementById('f-end').value||null,
+    taskEndDate:document.getElementById('f-enddate').value||null,
+    goalHours:parseFloat(document.getElementById('f-goal-week').value)||null,
+    goalLongTermHours:parseFloat(document.getElementById('f-goal-lt').value)||null,
+    note:document.getElementById('f-note').value.trim(),
+    unitType,customUnit:unitType==='custom'?customUnit:'',
+    goalUnits,doneUnits
+  };
+  if(editActId){
+    DB.activities=DB.activities.map(a=>a.id===editActId?{...a,...obj}:a);
+    toast('✅ '+name+' mis à jour');
+  }else{
+    DB.activities.push({id:Date.now().toString(),createdAt:new Date().toISOString(),...obj});
+    toast('✅ '+name+' créé !');
+  }
+  save();closeModal();render();
+}
+function deleteActivity(id){
+  if(!confirm('Supprimer cette activité ?'))return;
+  if(activeTimer?.activityId===id)stopTimer();
+  DB.activities=DB.activities.filter(a=>a.id!==id);
+  DB.sessions=DB.sessions.filter(s=>s.activityId!==id);
+  save();closeModal();toast('🗑 Supprimé');render();
+}
+
+// ════════════════════════════════════════════
+// EXPORT
+// ════════════════════════════════════════════
+function exportCSV(sessions){
+  const rows=[['Semaine','Activité','Catégorie','Jour','Date','Durée (min)','Durée (h:m:s)']];
+  sessions.forEach(s=>{
+    const a=DB.activities.find(x=>x.id===s.activityId);if(!a)return;
+    rows.push([s.weekKey,a.name,a.category||'',DAYS[s.day]||'',new Date(s.date).toLocaleDateString('fr-FR'),Math.round(s.duration/60),fmt(s.duration)]);
+  });
+  const csv=rows.map(r=>r.map(c=>`"${c}"`).join(',')).join('\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'}));
+  a.download=`timeflow_${getWeekKey()}.csv`;a.click();toast('⬇ CSV téléchargé');
+}
+function exportSheets(sessions){
+  const lines=sessions.map(s=>{const a=DB.activities.find(x=>x.id===s.activityId);if(!a)return null;return`${s.weekKey}\t${a.name}\t${a.category||''}\t${DAYS[s.day]}\t${new Date(s.date).toLocaleDateString('fr-FR')}\t${Math.round(s.duration/60)}\t${fmt(s.duration)}`;}).filter(Boolean);
+  const text='Semaine\tActivité\tCatégorie\tJour\tDate\tDurée (min)\tDurée (h:m:s)\n'+lines.join('\n');
+  if(navigator.clipboard)navigator.clipboard.writeText(text).then(()=>toast('📋 Copié → colle dans Sheets'));
+  else{const ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);toast('📋 Copié');}
+}
+
+// ════════════════════════════════════════════
+// TABS
+// ════════════════════════════════════════════
+function switchTab(tab){
+  currentTab=tab;
+  ['tracker','progress','dashboard','recap','history'].forEach(t=>{
+    const el=document.getElementById('nav-'+t);
+    if(el) el.classList.toggle('active',t===tab);
+  });
+  document.getElementById('fab').style.display=tab==='tracker'?'flex':'none';
+  document.getElementById('day-header').style.display=tab==='tracker'?'':'none';
+  render();
+}
+
+// ════════════════════════════════════════════
+// MAIN RENDER
+// ════════════════════════════════════════════
+function render(){
+  try{
+  renderBanner();
+  const today=getDay();
+  const CWK=getWeekKey();
+  const dispWK=displayedWeek||CWK;
+  const isCurrentWK=dispWK===CWK;
+  const weekSess=DB.sessions.filter(s=>s.weekKey===dispWK);
+  const cwkSess=DB.sessions.filter(s=>s.weekKey===CWK);
+  const allWKs=[...new Set(DB.sessions.map(s=>s.weekKey))].sort().reverse();
+  const totalWK=weekSess.reduce((a,s)=>a+s.duration,0);
+  const now=new Date();
+
+  // ══ DAY HEADER ══
+  const dh=document.getElementById('day-header');
+  if(currentTab==='tracker'){
+    dh.style.display='';
+    const todayActs=DB.activities.filter(a=>a.days&&a.days.includes(today));
+    const doneActs=todayActs.filter(a=>totalForDay(a.id,today,cwkSess)>0);
+    const todayTotal=cwkSess.filter(s=>s.day===today).reduce((a,s)=>a+s.duration,0);
+    const greet=now.getHours()<12?'Bonjour 🌅':now.getHours()<18?'Bonne journée ☀️':'Bonne soirée 🌙';
+    const pct=todayActs.length>0?Math.round((doneActs.length/todayActs.length)*100):0;
+
+    // Check upcoming task
+    let upcomingHTML='';
+    const nextAct=DB.activities.filter(a=>a.days?.includes(today)&&a.timeStart).sort((a,b)=>timeToMin(a.timeStart)-timeToMin(b.timeStart)).find(a=>{
+      const sm=timeToMin(a.timeStart);
+      const nm=now.getHours()*60+now.getMinutes();
+      return sm>nm;
+    });
+    if(nextAct){
+      const sm=timeToMin(nextAct.timeStart);
+      const nm=now.getHours()*60+now.getMinutes();
+      const diff=sm-nm;
+      upcomingHTML=`<div style="font-size:11px;color:var(--accent);margin-top:4px;font-weight:600;">
+        ⏳ Prochain : ${nextAct.emoji} ${nextAct.name} dans ${diff<60?diff+'min':`${Math.floor(diff/60)}h${diff%60?diff%60+'min':''}`}
+      </div>`;
+    }
+
+    dh.innerHTML=`<div style="max-width:600px;margin:0 auto;padding:16px 14px 12px;">
+      <div class="day-greeting">${greet}</div>
+      <div class="day-date">${DAYS_FULL[today]} ${now.getDate()} ${MONTHS[now.getMonth()]} · ${todayTotal>0?fmtS(todayTotal)+' trackés':todayActs.length>0?'Aucune session encore':''}</div>
+      ${upcomingHTML}
+      ${todayActs.length>0?`
+        <div class="day-progress-bar" style="margin-top:10px;"><div class="day-progress-fill" style="width:${pct}%"></div></div>
+        <div class="day-progress-lbl"><span>${doneActs.length}/${todayActs.length} activités démarrées</span><span>${pct}%</span></div>
+      `:''}
+    </div>`;
+  }else{
+    dh.style.display='none';
+  }
+
+  let html='';
+
+  // ══ TRACKER / JOURNÉE ══════════════════════
+  if(currentTab==='tracker'){
+    renderTimeline();
+
+    // Today's activities (all scheduled)
+    const todayAll=DB.activities.filter(a=>a.days&&a.days.includes(today));
+    
+    // Check if task has ended (taskEndDate passed)
+    const todayFiltered=todayAll.filter(a=>{
+      if(!a.taskEndDate)return true;
+      return new Date(a.taskEndDate)>=new Date(new Date().toDateString());
+    });
+
+    if(todayFiltered.length===0){
+      html=`<div class="empty"><div class="emoji">🗓️</div><p>Aucune activité prévue aujourd'hui.<br><br>Appuie sur <strong>+</strong> pour en créer une,<br>ou modifie tes activités existantes<br>pour inclure <strong>${DAYS_FULL[today]}</strong>.</p></div>`;
+    }else{
+      // Separate timed vs untimed
+      const timed=todayFiltered.filter(a=>a.timeStart&&a.timeEnd).sort((a,b)=>timeToMin(a.timeStart)-timeToMin(b.timeStart));
+      const untimed=todayFiltered.filter(a=>!a.timeStart||!a.timeEnd);
+
+      if(timed.length>0) html+=`<div class="section-lbl">🕐 AVEC HORAIRE</div>`;
+      timed.forEach(act=>{
+        try{ html+=renderTodayCard(act,today,cwkSess); }
+        catch(e){ html+=`<div style="background:#FF6B6B18;border:1px solid #FF6B6B44;border-radius:10px;padding:10px 14px;margin-bottom:9px;font-size:12px;color:#FF6B6B;">⚠️ Erreur affichage : ${act.name}</div>`; console.error(e); }
+      });
+
+      if(untimed.length>0) html+=`<div class="section-lbl" style="margin-top:${timed.length>0?'14px':'0'}">📋 SANS HORAIRE FIXE</div>`;
+      untimed.forEach(act=>{
+        try{ html+=renderTodayCard(act,today,cwkSess); }
+        catch(e){ html+=`<div style="background:#FF6B6B18;border:1px solid #FF6B6B44;border-radius:10px;padding:10px 14px;margin-bottom:9px;font-size:12px;color:#FF6B6B;">⚠️ Erreur affichage : ${act.name}</div>`; console.error(e); }
+      });
+    }
+
+    // All activities button
+    const otherActs=DB.activities.filter(a=>!a.days||!a.days.includes(today));
+    if(otherActs.length>0){
+      html+=`<div style="text-align:center;margin-top:14px;padding-bottom:6px;">
+        <button onclick="showAllActivities()" style="padding:8px 20px;background:var(--surface);border:1px solid var(--border2);border-radius:20px;color:var(--muted);font-size:12px;font-weight:600;">
+          + Voir toutes les activités (${otherActs.length} non prévues aujourd'hui)
+        </button>
+      </div>`;
+    }
+  }
+
+  // ══ PROGRESSION ════════════════════════════
+  else if(currentTab==='progress'){
+    document.getElementById('timeline').innerHTML='';
+    let ph='<div style="padding:14px 14px 0;max-width:600px;margin:0 auto;">';
+    ph+=`<div style="font-size:10px;color:var(--muted);font-weight:700;letter-spacing:.5px;margin-bottom:14px;">📈 PROGRESSION PAR ACTIVITÉ</div>`;
+
+    if(DB.activities.length===0){
+      ph+=`<div class="empty"><div class="emoji">📈</div><p>Crée tes premières activités<br>pour voir ta progression ici.</p></div>`;
+    } else {
+      DB.activities.forEach(act=>{
+        const allSess=DB.sessions.filter(s=>s.activityId===act.id);
+        const totalSec=allSess.reduce((a,s)=>a+s.duration,0);
+        const totalH=Math.round(totalSec/3600*10)/10;
+        const ltGoalH=act.goalLongTermHours||null;
+        const ltPct=ltGoalH?Math.min(100,Math.round((totalH/ltGoalH)*100)):null;
+        const streak=getStreak(act.id);
+        const unitDone=act.unitType&&act.unitType!=='none'?getUnitDone(act):null;
+        const unitGoal=act.goalUnits||null;
+        const unitLabel=act.unitType&&act.unitType!=='none'?getUnitLabel(act,true):'';
+        const unitPct=unitGoal?Math.min(100,Math.round((unitDone/unitGoal)*100)):null;
+        const ut=UNIT_TYPES.find(u=>u.id===act.unitType);
+        const proj=ltGoalH?getProjection(act):null;
+
+        // Weekly bars (last 6 weeks)
+        const last6wks=[...new Set(DB.sessions.map(s=>s.weekKey))].sort().slice(-6);
+        const maxWkSec=Math.max(...last6wks.map(wk=>totalFor(act.id,DB.sessions.filter(s=>s.weekKey===wk))),1);
+
+        ph+=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 15px;margin-bottom:12px;">
+          <!-- Header -->
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+            <div style="width:40px;height:40px;border-radius:10px;background:${act.color}22;border:1px solid ${act.color}44;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">${act.emoji}</div>
+            <div style="flex:1;">
+              <div style="font-weight:800;font-size:14px;">${act.name}</div>
+              <div style="font-size:10px;color:var(--muted);margin-top:1px;">${act.category||''} ${streak>0?'· 🔥 '+streak+'j streak':''}</div>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-size:16px;font-weight:800;color:${act.color}">${totalH}h</div>
+              <div style="font-size:9px;color:var(--muted)">${allSess.length} sessions</div>
+            </div>
+          </div>
+
+          <!-- Barre long terme heures -->
+          ${ltGoalH?`<div style="margin-bottom:10px;">
+            <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-bottom:4px;">
+              <span>⏱ ${totalH}h / ${ltGoalH}h</span>
+              <span style="color:${ltPct>=100?'var(--green)':act.color};font-weight:700">${ltPct}%</span>
+            </div>
+            <div style="background:var(--border);border-radius:5px;height:8px;overflow:hidden;">
+              <div style="height:100%;width:${ltPct}%;background:${ltPct>=100?'var(--green)':act.color};border-radius:5px;"></div>
+            </div>
+            ${proj&&!proj.done?`<div style="font-size:10px;color:var(--muted);margin-top:4px;">📅 Fin estimée : <strong style="color:${act.color}">${proj.date.toLocaleDateString('fr-FR',{month:'short',year:'numeric'})}</strong> · ${proj.weeks} sem. restantes</div>`:''}
+            ${proj?.done?`<div style="font-size:10px;color:var(--green);margin-top:4px;font-weight:700;">🏆 Objectif heures atteint !</div>`:''}
+          </div>`:''}
+
+          <!-- Barre progression unités -->
+          ${unitGoal?`<div style="margin-bottom:10px;">
+            <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-bottom:4px;">
+              <span>${ut?.icon||'📊'} ${unitDone} / ${unitGoal} ${unitLabel}</span>
+              <span style="color:${unitPct>=100?'var(--green)':act.color};font-weight:700">${unitPct}%</span>
+            </div>
+            <div style="background:var(--border);border-radius:5px;height:8px;overflow:hidden;">
+              <div style="height:100%;width:${unitPct}%;background:${unitPct>=100?'var(--green)':act.color};border-radius:5px;"></div>
+            </div>
+            ${unitPct>=100?`<div style="font-size:10px;color:var(--green);margin-top:4px;font-weight:700;">🏆 ${unitLabel.charAt(0).toUpperCase()+unitLabel.slice(1)} terminées !</div>`:''}
+          </div>`:''}
+
+          <!-- Mini graphe 6 semaines -->
+          ${last6wks.length>0?`<div style="margin-bottom:10px;">
+            <div style="font-size:9px;color:var(--muted);margin-bottom:5px;">6 DERNIÈRES SEMAINES</div>
+            <div style="display:flex;align-items:flex-end;gap:4px;height:36px;">
+              ${last6wks.map(wk=>{
+                const wkSec=totalFor(act.id,DB.sessions.filter(s=>s.weekKey===wk));
+                const pct=Math.round((wkSec/maxWkSec)*100);
+                const isCur=wk===CWK;
+                return`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;">
+                  <div style="width:100%;border-radius:3px 3px 0 0;background:${isCur?act.color:act.color+'66'};height:${Math.max(pct,3)}%;min-height:${wkSec>0?'4px':'2px'};"></div>
+                  <div style="font-size:8px;color:${isCur?'var(--text)':'var(--muted)'};font-weight:${isCur?700:400};">${weekLabel(wk).replace('Sem. ','')}</div>
+                </div>`;
+              }).join('')}
+            </div>
+          </div>`:''}
+
+          <!-- Bouton voir fiche -->
+          <button onclick="openFiche('${act.id}')" style="width:100%;padding:8px;background:${act.color}18;border:1px solid ${act.color}33;border-radius:8px;color:${act.color};font-size:12px;font-weight:700;">
+            Voir la fiche détaillée →
+          </button>
+        </div>`;
+      });
+    }
+    ph+='</div>';
+    html=ph;
+  }
+
+  // ══ DASHBOARD ══════════════════════════════
+  else if(currentTab==='dashboard'){
+    document.getElementById('timeline').innerHTML='';
+    const totalAllSec=DB.sessions.reduce((a,s)=>a+s.duration,0);
+    const allWkKeys=[...new Set(DB.sessions.map(s=>s.weekKey))];
+    const avgWk=allWkKeys.length>0?totalAllSec/allWkKeys.length:0;
+    const totalWkSec=cwkSess.reduce((a,s)=>a+s.duration,0);
+
+    html+=`<div style="padding:16px 14px 0;max-width:600px;margin:0 auto;">`;
+    html+=`<div class="stats-grid">
+      <div class="stat-box"><div class="stat-label">CETTE SEMAINE</div><div class="stat-val" style="color:var(--accent)">${fmtS(totalWkSec)}</div><div class="stat-sub">${cwkSess.length} sessions</div></div>
+      <div class="stat-box"><div class="stat-label">MOYENNE / SEMAINE</div><div class="stat-val">${fmtS(Math.round(avgWk))}</div><div class="stat-sub">${allWkKeys.length} sem. tracées</div></div>
+      <div class="stat-box"><div class="stat-label">TOTAL CUMULÉ</div><div class="stat-val">${fmtS(totalAllSec)}</div><div class="stat-sub">depuis le début</div></div>
+      <div class="stat-box"><div class="stat-label">ACTIVITÉS</div><div class="stat-val">${DB.activities.length}</div><div class="stat-sub">${DB.activities.filter(a=>a.days?.includes(today)).length} prévues auj.</div></div>
+    </div>`;
+
+    // Alertes
+    const alerts=[];
+    DB.activities.forEach(act=>{
+      if(act.goalHours){
+        const done=totalFor(act.id,cwkSess);const goal=act.goalHours*3600;const pct=Math.round((done/goal)*100);
+        if(pct>=100)alerts.push({type:'good',icon:'✅',title:`${act.emoji} ${act.name}`,msg:`Objectif semaine atteint ! (${fmtS(done)} / ${act.goalHours}h)`});
+        else if(pct<40&&today>=4)alerts.push({type:'danger',icon:'🚨',title:`${act.emoji} ${act.name}`,msg:`Retard critique : ${pct}% seulement. ${fmtS(goal-done)} restantes.`});
+        else if(pct<60&&today>=3)alerts.push({type:'warn',icon:'⚠️',title:`${act.emoji} ${act.name}`,msg:`À la traîne : ${pct}% de l'objectif hebdo.`});
+      }
+      const streak=getStreak(act.id);
+      if(streak>=7)alerts.push({type:'good',icon:'🔥',title:`${act.emoji} ${act.name}`,msg:`${streak} jours de streak ! Incroyable régularité.`});
+      else if(streak===0&&act.days?.includes(today)&&totalForDay(act.id,today,cwkSess)===0)
+        alerts.push({type:'warn',icon:'📌',title:`${act.emoji} ${act.name}`,msg:`Prévu aujourd'hui — pas encore démarré.`});
+    });
+    // Tâches qui se terminent bientôt
+    DB.activities.forEach(act=>{
+      if(act.taskEndDate){
+        const days=Math.ceil((new Date(act.taskEndDate)-new Date())/(86400000));
+        if(days<=3&&days>=0)alerts.push({type:'warn',icon:'📅',title:`${act.emoji} ${act.name}`,msg:`Se termine ${days===0?'aujourd\'hui':days===1?'demain':'dans '+days+' jours'} (${new Date(act.taskEndDate).toLocaleDateString('fr-FR')}).`});
+      }
+    });
+    if(alerts.length>0){
+      html+=`<div class="section-lbl" style="margin-top:14px;">🔔 ALERTES & INSIGHTS</div>`;
+      alerts.slice(0,5).forEach(a=>{html+=`<div class="alert-box ${a.type}"><div class="alert-icon">${a.icon}</div><div class="alert-text"><strong>${a.title}</strong>${a.msg}</div></div>`;});
+    }
+
+    // Répartition
+    const catMap={};
+    cwkSess.forEach(s=>{const a=DB.activities.find(x=>x.id===s.activityId);if(!a)return;const c=a.category||'Autre';catMap[c]=(catMap[c]||0)+s.duration;});
+    const catEntries=Object.entries(catMap).sort((a,b)=>b[1]-a[1]);
+    if(catEntries.length>0){
+      html+=`<div class="section-lbl" style="margin-top:14px;">⚖️ RÉPARTITION PAR CATÉGORIE</div><div class="card">`;
+      catEntries.forEach(([cat,sec])=>{
+        const pct=totalWkSec>0?Math.round((sec/totalWkSec)*100):0;
+        const col=COLORS[CATS.indexOf(cat)%COLORS.length]||'#6C63FF';
+        html+=`<div class="cat-row"><div class="cat-label">${cat}</div><div class="cat-bar-wrap"><div class="cat-bar-fill" style="width:${pct}%;background:${col};height:100%;border-radius:4px;"></div></div><div class="cat-time">${fmtS(sec)}</div></div>`;
+      });
+      const workPct=Math.round(((catMap['💼 Travail']||0)/Math.max(totalWkSec,1))*100);
+      const healthPct=Math.round((((catMap['💪 Santé']||0)+(catMap['🏠 Perso']||0))/Math.max(totalWkSec,1))*100);
+      let conseil=workPct>70?`⚠️ <strong>${workPct}% sur le Travail</strong>. Intègre du temps pour Projets et Santé.`:healthPct<10&&totalWkSec>3600?`💡 <strong>Moins de 10% sur Santé/Perso</strong>. Ton énergie long terme en dépend.`:`✅ <strong>Répartition équilibrée</strong> cette semaine.`;
+      html+=`<div style="margin-top:10px;padding:10px;background:var(--bg);border-radius:8px;font-size:12px;line-height:1.5;color:#aaa">${conseil}</div></div>`;
+    }
+
+    // Projections
+    const actsLT=DB.activities.filter(a=>a.goalLongTermHours);
+    if(actsLT.length>0){
+      html+=`<div class="section-lbl" style="margin-top:14px;">🚀 PROJECTIONS LONG TERME</div><div class="proj-box">`;
+      actsLT.forEach(act=>{
+        const p=getProjection(act);if(!p)return;
+        if(p.done){html+=`<div class="proj-row"><div><div style="font-weight:700;font-size:12px">${act.emoji} ${act.name}</div><div style="font-size:10px;color:var(--green)">🏆 Objectif atteint !</div></div><div style="font-size:11px;font-weight:700;color:var(--green)">100%</div></div>`;}
+        else{
+          const urgCol=p.weeks<=4?'var(--red)':p.weeks<=12?'var(--yellow)':'var(--muted)';
+          html+=`<div class="proj-row"><div><div style="font-weight:700;font-size:12px">${act.emoji} ${act.name}</div><div style="font-size:10px;color:var(--muted)">📅 ${p.date.toLocaleDateString('fr-FR',{month:'short',year:'numeric'})} · ${p.weeks} sem. · ${p.remaining}h restantes</div></div><div style="font-size:11px;font-weight:700;color:${urgCol}">${p.pct}%</div></div>`;
+        }
+      });
+      html+=`</div>`;
+    }
+
+    // Streak
+    if(DB.activities.length>0){
+      html+=`<div class="section-lbl" style="margin-top:14px;">🔥 RÉGULARITÉ — 30 DERNIERS JOURS</div>`;
+      DB.activities.slice(0,4).forEach(act=>{
+        const days=getLast30(act.id);const streak=getStreak(act.id);
+        html+=`<div class="card" style="margin-bottom:10px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <div style="font-weight:700;font-size:13px">${act.emoji} ${act.name}</div>
+            <div style="font-size:11px;color:var(--yellow);font-weight:700">${streak>0?`🔥 ${streak}j`:'—'}</div>
+          </div>
+          <div class="streak-grid">
+            ${days.map((d,i)=>{const isToday=i===29;let cls='streak-day';if(d.scheduled){if(d.done>=300)cls+=' done';else if(d.done>0)cls+=' partial';else cls+=' missed';}if(isToday)cls+=' today';return`<div class="${cls}" title="${d.date.toLocaleDateString('fr-FR')}: ${d.done>0?fmtS(d.done):'—'}">${d.date.getDate()}</div>`;}).join('')}
+          </div>
+          <div style="display:flex;gap:12px;margin-top:7px;font-size:10px;color:var(--muted);">
+            <span><span style="color:var(--green)">■</span> Fait</span>
+            <span><span style="color:var(--yellow)">■</span> Partiel</span>
+            <span><span style="color:#FF6B6B44">■</span> Manqué</span>
+          </div>
+        </div>`;
+      });
+    }
+    html+=`</div>`;
+  }
+
+  // ══ RECAP ══════════════════════════════════
+  else if(currentTab==='recap'){
+    document.getElementById('timeline').innerHTML='';
+    html=`<div style="padding:14px 14px 0;max-width:600px;margin:0 auto;">`;
+    html+=`<div class="week-scroller">
+      <button class="week-chip${!displayedWeek?' active':''}" onclick="setWeek(null)">Sem. actuelle</button>
+      ${allWKs.filter(w=>w!==CWK).map(w=>`<button class="week-chip${displayedWeek===w?' active':''}" onclick="setWeek('${w}')">${weekLabel(w)}</button>`).join('')}
+    </div>`;
+    html+=`<div style="background:linear-gradient(135deg,var(--accent)22,var(--accent)08);border:1px solid var(--accent)33;border-radius:var(--radius);padding:14px 16px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;">
+      <div><div style="font-size:10px;color:var(--accent);font-weight:700">TOTAL ${isCurrentWK?'SEMAINE':'SÉLECTIONNÉE'}</div><div style="font-size:22px;font-weight:800;margin-top:3px">${fmtS(totalWK)||'0m'}</div><div style="font-size:10px;color:var(--muted);margin-top:2px">${weekSess.length} sessions</div></div>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <button class="btn-sec" style="color:var(--green);border-color:var(--green)44;font-size:11px;" onclick="exportCSV(DB.sessions.filter(s=>s.weekKey==='${dispWK}'))">⬇ CSV</button>
+        <button class="btn-sec" style="color:var(--blue);border-color:var(--blue)44;font-size:11px;" onclick="exportSheets(DB.sessions.filter(s=>s.weekKey==='${dispWK}'))">📋 Sheets</button>
+      </div>
+    </div>`;
+    const sorted=[...DB.activities].sort((a,b)=>totalFor(b.id,weekSess)-totalFor(a.id,weekSess));
+    if(!sorted.find(a=>totalFor(a.id,weekSess)>0)){
+      html+=`<div class="empty"><div class="emoji">📅</div><p>Aucune session cette semaine.</p></div>`;
+    }else{
+      sorted.forEach(act=>{
+        const total=totalFor(act.id,weekSess);if(!total&&!act.goalHours)return;
+        const pct=totalWK>0?Math.round((total/totalWK)*100):0;
+        const goalSec=act.goalHours?act.goalHours*3600:null;
+        const goalPct=goalSec?Math.min(100,Math.round((total/goalSec)*100)):null;
+        const maxDay=Math.max(...DAYS.map((_,i)=>totalForDay(act.id,i,weekSess)),1);
+        html+=`<div class="recap-row">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;">
+            <div style="display:flex;align-items:center;gap:7px;font-weight:700;font-size:13px;"><div style="width:9px;height:9px;border-radius:50%;background:${act.color}"></div>${act.emoji||''} ${act.name}</div>
+            <div><span style="font-weight:700;color:${act.color}">${total>0?fmtS(total):'—'}</span><span style="color:var(--muted);font-size:10px;margin-left:6px">${pct}%</span></div>
+          </div>
+          <div style="background:var(--border);border-radius:3px;height:4px;margin-bottom:${goalSec?'8px':'10px'}"><div style="width:${pct}%;height:100%;border-radius:3px;background:${act.color}"></div></div>
+          ${goalSec?`<div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="font-size:10px;color:var(--muted)">🎯 Objectif ${act.goalHours}h</span><span style="font-size:10px;font-weight:700;color:${goalPct>=100?'var(--green)':'var(--muted)'}">${goalPct}% ${goalPct>=100?'✓':''}</span></div><div style="background:var(--border);border-radius:3px;height:3px;margin-bottom:10px"><div style="width:${goalPct}%;height:100%;border-radius:3px;background:${goalPct>=100?'var(--green)':act.color}"></div></div>`:''}
+          <div class="day-bars">
+            ${DAYS.map((d,i)=>{const dt=totalForDay(act.id,i,weekSess);const isToday=isCurrentWK&&i===today;const barPct=Math.round((dt/maxDay)*100);return`<div class="day-col"><div class="day-bar-bg"><div class="day-bar-fill" style="height:${barPct}%;background:${dt>0?act.color+'BB':'transparent'};border-top:${isToday&&dt>0?`2px solid ${act.color}`:'none'};"></div></div><div class="day-lbl${isToday?' today':''}">${d}</div></div>`;}).join('')}
+          </div>
+        </div>`;
+      });
+    }
+    html+=`</div>`;
+  }
+
+  // ══ HISTORY ════════════════════════════════
+  else if(currentTab==='history'){
+    document.getElementById('timeline').innerHTML='';
+    html=`<div style="padding:14px 14px 0;max-width:600px;margin:0 auto;">`;
+    html+=`<div class="section-lbl">TOUTES LES SEMAINES</div>`;
+    html+=`<div style="display:flex;gap:8px;margin-bottom:14px;">
+      <button class="btn-sec" style="flex:1;padding:10px;color:var(--green);border-color:var(--green)44" onclick="exportCSV(DB.sessions)">⬇ Tout (CSV)</button>
+      <button class="btn-sec" style="flex:1;padding:10px;color:var(--blue);border-color:var(--blue)44" onclick="exportSheets(DB.sessions)">📋 Tout → Sheets</button>
+    </div>`;
+    if(allWKs.length===0){
+      html+=`<div class="empty"><div class="emoji">🗂️</div><p>Lance ton premier timer !</p></div>`;
+    }else{
+      allWKs.forEach(wk=>{
+        const wkS=DB.sessions.filter(s=>s.weekKey===wk);
+        const wkT=wkS.reduce((a,s)=>a+s.duration,0);
+        const tags=DB.activities.map(act=>{const t=totalFor(act.id,wkS);if(!t)return'';return`<span class="hist-tag" style="background:${act.color}22;color:${act.color};border:1px solid ${act.color}44">${act.emoji} ${act.name} · ${fmtS(t)}</span>`;}).join('');
+        html+=`<div class="hist-card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <div><div style="font-size:13px;font-weight:700">${wk===CWK?'📍 Semaine actuelle':weekLabel(wk)}</div><div style="font-size:10px;color:var(--muted);margin-top:2px">${wkS.length} sessions</div></div>
+            <div style="font-size:16px;font-weight:800;color:var(--accent)">${fmtS(wkT)}</div>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px;">${tags}</div>
+          <button class="btn-sec" style="font-size:11px;" onclick="setWeek('${wk}');switchTab('recap')">Voir le détail →</button>
+        </div>`;
+      });
+    }
+    html+=`</div>`;
+  }
+
+  document.getElementById('page-content').innerHTML=html;
+  }catch(globalErr){console.error('Render error:',globalErr);document.getElementById('page-content').innerHTML='<div style="padding:20px;color:#FF6B6B;font-size:13px;">⚠️ Erreur: '+globalErr.message+'</div>';}
+}
+
+function renderUnitMeta(act){
+  try{
+    if(!act.unitType||act.unitType==='none') return '';
+    const ud=getUnitDone(act);
+    const ug=act.goalUnits||null;
+    const ul=getUnitLabel(act,true);
+    const ut=UNIT_TYPES.find(u=>u.id===act.unitType);
+    const upct=ug?Math.min(100,Math.round((ud/ug)*100)):null;
+    return '<div style="font-size:10px;margin-top:2px;color:'+act.color+';font-weight:600;">'+(ut?.icon||'📊')+' '+ud+' '+ul+(ug?' / '+ug+' ('+upct+'%)':'')+(upct>=100?' ✅':'')+'</div>';
+  }catch(e){return '';}
+}
+
+function renderTodayCard(act,today,cwkSess){
+  const isActive=activeTimer?.activityId===act.id;
+  const totalW=totalFor(act.id,cwkSess);
+  const todayT=totalForDay(act.id,today,cwkSess)+(isActive?elapsed:0);
+  const goalSec=act.goalHours?act.goalHours*3600:null;
+  const goalPct=goalSec?Math.min(100,Math.round((totalW/goalSec)*100)):null;
+  const streak=getStreak(act.id);
+  const endDateLabel=act.taskEndDate?` · Fin : ${new Date(act.taskEndDate).toLocaleDateString('fr-FR',{day:'numeric',month:'short'})}`:'';
+  const nowMin=new Date().getHours()*60+new Date().getMinutes();
+  const isInSlot=act.timeStart&&act.timeEnd&&nowMin>=timeToMin(act.timeStart)&&nowMin<timeToMin(act.timeEnd);
+
+  // Long-term progress
+  const ltDoneSec=DB.sessions.filter(s=>s.activityId===act.id).reduce((a,s)=>a+s.duration,0)+(isActive?elapsed:0);
+  const ltDoneH=ltDoneSec/3600;
+  const ltGoalH=act.goalLongTermHours||null;
+  const ltPct=ltGoalH?Math.min(100,Math.round((ltDoneH/ltGoalH)*100)):null;
+  const ltRemH=ltGoalH?Math.max(0,Math.round((ltGoalH-ltDoneH)*10)/10):null;
+
+  // Projection
+  const proj=ltGoalH?getProjection(act):null;
+
+  return`<div class="today-card${isActive?' running':''}" style="--c:${act.color};${isInSlot?`border-color:${act.color}88;`:''}">
+    <!-- HEAD : tap nom = ouvre fiche -->
+    <div class="today-card-head">
+      <div class="today-icon" style="background:${act.color}22;border:1px solid ${act.color}44;cursor:pointer;" onclick="openFiche('${act.id}')">${act.emoji}</div>
+      <div class="today-info" style="cursor:pointer;" onclick="openFiche('${act.id}')">
+        <div class="today-name">${act.name}${streak>1?` <span style="font-size:10px;color:var(--yellow)">🔥${streak}</span>`:''} <span style="font-size:10px;color:var(--muted)">›</span></div>
+        <div class="today-slot" style="color:${act.timeStart?act.color:'var(--muted)'}">
+          ${act.timeStart&&act.timeEnd?`🕐 ${act.timeStart} – ${act.timeEnd}${endDateLabel}`:`📋 Flexible${endDateLabel}`}
+          ${isInSlot?` <span style="color:var(--green);font-weight:700">● Maintenant</span>`:''}
+        </div>
+        <div style="font-size:10px;color:var(--muted);margin-top:2px;">
+          Auj: <span style="color:#ccc">${todayT>0?fmtS(todayT):'—'}</span>
+          · Sem: <span style="color:${act.color}">${totalW>0?fmtS(totalW):'—'}</span>
+          ${goalPct!==null?`<span style="color:${goalPct>=100?'var(--green)':'var(--muted)'}"> · ${goalPct}% obj.</span>`:''}
+        </div>
+        ${renderUnitMeta(act)};
+        })():''}
+      </div>
+      <div class="today-actions">
+        <button class="btn-edit-sm" onclick="openAddModal('${act.id}')">✏️</button>
+        ${isActive
+          ?`<button class="btn-stop" onclick="stopTimer()" style="--c:${act.color}">■</button>`
+          :`<button class="btn-start" onclick="startTimer('${act.id}')">▶</button>`
+        }
+      </div>
+    </div>
+
+    <!-- OBJECTIF HEBDO -->
+    ${goalSec?`<div class="today-progress" style="margin-top:8px;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:3px;font-size:9px;color:var(--muted)">
+        <span>📅 Semaine : ${fmtS(totalW)} / ${act.goalHours}h</span>
+        <span style="color:${goalPct>=100?'var(--green)':'var(--muted);'}">${goalPct}%</span>
+      </div>
+      <div class="today-prog-wrap"><div class="today-prog-fill" style="width:${goalPct}%;background:${goalPct>=100?'var(--green)':act.color}"></div></div>
+    </div>`:''}
+
+    <!-- OBJECTIF LONG TERME -->
+    ${ltGoalH?`<div style="margin-top:7px;padding:8px 10px;background:${act.color}0E;border-radius:8px;border:1px solid ${act.color}22;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
+        <span style="font-size:10px;font-weight:700;color:${act.color}">🚀 Objectif long terme</span>
+        <span style="font-size:11px;font-weight:800;color:${ltPct>=100?'var(--green)':act.color}">${ltPct}%</span>
+      </div>
+      <!-- Barre long terme -->
+      <div style="background:var(--border);border-radius:4px;height:7px;position:relative;overflow:hidden;">
+        <div style="position:absolute;left:0;top:0;height:100%;width:${ltPct}%;background:${ltPct>=100?'var(--green)':act.color};border-radius:4px;transition:width .6s;"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:5px;font-size:9px;color:var(--muted);">
+        <span>${Math.round(ltDoneH*10)/10}h faites</span>
+        <span style="color:#777">${ltRemH}h restantes</span>
+        <span>${ltGoalH}h total</span>
+      </div>
+      ${proj&&!proj.done?`<div style="font-size:10px;color:var(--muted);margin-top:4px;text-align:center;">
+        📅 Objectif atteint vers <strong style="color:${act.color}">${proj.date.toLocaleDateString('fr-FR',{month:'long',year:'numeric'})}</strong> · encore ${proj.weeks} sem.
+      </div>`:''}
+      ${proj&&proj.done?`<div style="font-size:10px;color:var(--green);margin-top:4px;text-align:center;font-weight:700;">🏆 Objectif long terme atteint !</div>`:''}
+    </div>`:''}
+
+    <!-- OBJECTIF EN UNITÉS (pages, modules...) -->
+    ${act.unitType&&act.unitType!=='none'&&act.goalUnits?(()=>{
+      const ud=getUnitDone(act);
+      const ug=act.goalUnits;
+      const ul=getUnitLabel(act,true);
+      const ut=UNIT_TYPES.find(u=>u.id===act.unitType);
+      const upct=Math.min(100,Math.round((ud/ug)*100));
+      const urem=Math.max(0,ug-ud);
+      return`<div style="margin-top:7px;padding:8px 10px;background:${act.color}0E;border-radius:8px;border:1px solid ${act.color}22;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
+          <span style="font-size:10px;font-weight:700;color:${act.color}">${ut?.icon||'📊'} ${ul.charAt(0).toUpperCase()+ul.slice(1)}</span>
+          <span style="font-size:11px;font-weight:800;color:${upct>=100?'var(--green)':act.color}">${upct}%</span>
+        </div>
+        <div style="background:var(--border);border-radius:4px;height:7px;overflow:hidden;">
+          <div style="height:100%;width:${upct}%;background:${upct>=100?'var(--green)':act.color};border-radius:4px;transition:width .6s;"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:5px;font-size:9px;color:var(--muted);">
+          <span>${ud} faits</span>
+          <span style="color:#777">${urem} restants</span>
+          <span>/ ${ug} ${ul}</span>
+        </div>
+        ${upct>=100?`<div style="font-size:10px;color:var(--green);margin-top:4px;text-align:center;font-weight:700;">🏆 ${ul.charAt(0).toUpperCase()+ul.slice(1)} terminées !</div>`:''}
+      </div>`;
+    })():''}
+  </div>`;
+}
+
+function showAllActivities(){
+  const today=getDay();
+  const other=DB.activities.filter(a=>!a.days||!a.days.includes(today));
+  openModal(`📋 Toutes les activités (${other.length})`,
+    other.map(act=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div style="width:32px;height:32px;border-radius:8px;background:${act.color}22;display:flex;align-items:center;justify-content:center;font-size:16px;">${act.emoji}</div>
+        <div><div style="font-weight:600;font-size:13px">${act.name}</div><div style="font-size:10px;color:var(--muted)">${act.days&&act.days.length>0?act.days.map(d=>DAYS[d]).join(', '):'Aucun jour'}</div></div>
+      </div>
+      <button onclick="startTimer('${act.id}');closeModal()" style="padding:6px 12px;background:${act.color}22;border:1px solid ${act.color}44;border-radius:7px;color:${act.color};font-size:11px;font-weight:700;">▶ Start</button>
+    </div>`).join('')+
+    `<button class="btn-primary" style="margin-top:14px;" onclick="closeModal()">Fermer</button>`
+  );
+}
+
+function setWeek(wk){displayedWeek=wk;render();}
+
+// ════════════════════════════════════════════
+// FICHE DÉTAILLÉE PAR ACTIVITÉ
+// ════════════════════════════════════════════
+function openFiche(actId){
+  const act=DB.activities.find(a=>a.id===actId);
+  if(!act)return;
+
+  // All sessions for this activity
+  const allSess=DB.sessions.filter(s=>s.activityId===actId).sort((a,b)=>new Date(b.date)-new Date(a.date));
+  const totalSec=allSess.reduce((a,s)=>a+s.duration,0);
+  const totalH=Math.round(totalSec/3600*10)/10;
+
+  // Long-term
+  const ltGoalH=act.goalLongTermHours||null;
+  const ltPct=ltGoalH?Math.min(100,Math.round((totalH/ltGoalH)*100)):null;
+  const ltRemH=ltGoalH?Math.max(0,Math.round((ltGoalH-totalH)*10)/10):null;
+  const proj=ltGoalH?getProjection(act):null;
+
+  // Weekly history (last 8 weeks)
+  const allWKs=[...new Set(DB.sessions.map(s=>s.weekKey))].sort().slice(-8);
+  const maxWkSec=Math.max(...allWKs.map(wk=>totalFor(actId,DB.sessions.filter(s=>s.weekKey===wk))),1);
+  const CWK=getWeekKey();
+  const streak=getStreak(act.id);
+
+  // Sessions récentes (last 5)
+  const recentSess=allSess.slice(0,8);
+
+  // Stats
+  const avgPerSess=allSess.length>0?Math.round(totalSec/allSess.length):0;
+  const bestWkSec=Math.max(...allWKs.map(wk=>totalFor(actId,DB.sessions.filter(s=>s.weekKey===wk))),0);
+  const activeWks=allWKs.filter(wk=>totalFor(actId,DB.sessions.filter(s=>s.weekKey===wk))>0).length;
+
+  const html=`
+    <!-- Header activité -->
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;">
+      <div style="width:52px;height:52px;border-radius:14px;background:${act.color}22;border:1px solid ${act.color}44;display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;">${act.emoji}</div>
+      <div>
+        <div style="font-size:18px;font-weight:800;">${act.name}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px;">${act.category||''} · ${act.days?.map(d=>DAYS[d]).join(', ')||'—'}</div>
+        ${act.note?`<div style="font-size:11px;color:var(--muted);font-style:italic;margin-top:3px;">"${act.note}"</div>`:''}
+      </div>
+    </div>
+
+    <!-- Stats rapides -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;">
+      <div style="background:var(--bg);border:1px solid var(--border2);border-radius:10px;padding:11px 13px;">
+        <div style="font-size:9px;color:var(--muted);font-weight:700;letter-spacing:.4px;margin-bottom:3px;">TOTAL CUMULÉ</div>
+        <div style="font-size:20px;font-weight:800;color:${act.color}">${totalH}h</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:1px;">${allSess.length} sessions</div>
+      </div>
+      <div style="background:var(--bg);border:1px solid var(--border2);border-radius:10px;padding:11px 13px;">
+        <div style="font-size:9px;color:var(--muted);font-weight:700;letter-spacing:.4px;margin-bottom:3px;">STREAK ACTUEL</div>
+        <div style="font-size:20px;font-weight:800;color:var(--yellow)">${streak>0?streak+'j':'—'}</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:1px;">${streak>0?'🔥 consécutifs':'Pas encore démarré'}</div>
+      </div>
+      <div style="background:var(--bg);border:1px solid var(--border2);border-radius:10px;padding:11px 13px;">
+        <div style="font-size:9px;color:var(--muted);font-weight:700;letter-spacing:.4px;margin-bottom:3px;">MEILLEURE SEMAINE</div>
+        <div style="font-size:20px;font-weight:800;">${bestWkSec>0?fmtS(bestWkSec):'—'}</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:1px;">${activeWks} sem. actives</div>
+      </div>
+      <div style="background:var(--bg);border:1px solid var(--border2);border-radius:10px;padding:11px 13px;">
+        <div style="font-size:9px;color:var(--muted);font-weight:700;letter-spacing:.4px;margin-bottom:3px;">MOY. PAR SESSION</div>
+        <div style="font-size:20px;font-weight:800;">${avgPerSess>0?fmtS(avgPerSess):'—'}</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:1px;">durée moyenne</div>
+      </div>
+    </div>
+
+    ${ltGoalH?`
+    <!-- Objectif long terme -->
+    <div style="background:${act.color}12;border:1px solid ${act.color}33;border-radius:12px;padding:14px 15px;margin-bottom:16px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <div style="font-size:12px;font-weight:800;color:${act.color}">🚀 Objectif long terme</div>
+        <div style="font-size:18px;font-weight:800;color:${ltPct>=100?'var(--green)':act.color}">${ltPct}%</div>
+      </div>
+      <!-- Grande barre de progression -->
+      <div style="background:var(--border);border-radius:6px;height:12px;position:relative;overflow:hidden;margin-bottom:8px;">
+        <div style="position:absolute;left:0;top:0;height:100%;width:${ltPct}%;background:${ltPct>=100?'var(--green)':act.color};border-radius:6px;transition:width .8s;"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:10px;">
+        <span><strong style="color:${act.color}">${totalH}h</strong> faites</span>
+        <span><strong>${ltRemH}h</strong> restantes</span>
+        <span>/ <strong>${ltGoalH}h</strong></span>
+      </div>
+      ${proj&&!proj.done?`
+      <div style="background:var(--bg);border-radius:8px;padding:10px 12px;">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:4px;font-weight:700;">📅 PROJECTION</div>
+        <div style="font-size:13px;font-weight:700;">Objectif atteint vers <span style="color:${act.color}">${proj.date.toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'})}</span></div>
+        <div style="font-size:11px;color:var(--muted);margin-top:3px;">encore ${proj.weeks} semaines · à raison de ${act.goalHours||'?'}h/semaine</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:1px;">
+          ${proj.weeks<=4?'🔴 Très proche — dernière ligne droite !':proj.weeks<=12?'🟡 Dans moins de 3 mois, continue !':'🟢 Bon rythme — maintiens la régularité'}
+        </div>
+      </div>`:''}
+      ${proj&&proj.done?`<div style="text-align:center;padding:10px;font-size:13px;font-weight:700;color:var(--green);">🏆 Objectif long terme atteint ! Félicitations !</div>`:''}
+    </div>`:''}
+
+    <!-- Graphique semaines (8 dernières) -->
+    ${allWKs.length>0?`
+    <div style="font-size:10px;color:var(--muted);font-weight:700;letter-spacing:.5px;margin-bottom:10px;">📊 PROGRESSION HEBDOMADAIRE</div>
+    <div style="background:var(--bg);border:1px solid var(--border2);border-radius:12px;padding:14px;margin-bottom:16px;">
+      <div style="display:flex;align-items:flex-end;gap:6px;height:80px;">
+        ${allWKs.map(wk=>{
+          const wkSec=totalFor(actId,DB.sessions.filter(s=>s.weekKey===wk));
+          const barPct=Math.round((wkSec/maxWkSec)*100);
+          const isCurrent=wk===CWK;
+          const wkLabel=weekLabel(wk).replace('Sem. ','');
+          return`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;">
+            ${wkSec>0?`<div style="font-size:8px;color:${isCurrent?act.color:'var(--muted)'};font-weight:700;">${fmtS(wkSec)}</div>`:'<div style="font-size:8px;color:transparent;">—</div>'}
+            <div style="width:100%;border-radius:4px 4px 0 0;background:${isCurrent?act.color:act.color+'66'};height:${Math.max(barPct,3)}%;min-height:${wkSec>0?'6px':'2px'};transition:height .4s;"></div>
+            <div style="font-size:8px;color:${isCurrent?'var(--text)':'var(--muted)'};font-weight:${isCurrent?700:400};white-space:nowrap;">${wkLabel}</div>
+          </div>`;
+        }).join('')}
+      </div>
+      ${act.goalHours?`<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:10px;color:var(--muted);display:flex;justify-content:space-between;"><span>Objectif hebdo : ${act.goalHours}h</span><span>Moy. : ${activeWks>0?fmtS(Math.round(totalSec/activeWks)):'—'}/sem.</span></div>`:''}
+    </div>`:''}
+
+    <!-- Sessions récentes -->
+    ${recentSess.length>0?`
+    <div style="font-size:10px;color:var(--muted);font-weight:700;letter-spacing:.5px;margin-bottom:10px;">🕐 SESSIONS RÉCENTES</div>
+    ${recentSess.map(s=>{
+      const d=new Date(s.date);
+      return`<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border);">
+        <div>
+          <div style="font-size:12px;font-weight:600;">${DAYS[s.day]} ${d.getDate()} ${MONTHS[d.getMonth()]}</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:1px;">${d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}</div>
+        </div>
+        <div style="font-size:13px;font-weight:700;color:${act.color}">${fmtS(s.duration)}</div>
+      </div>`;
+    }).join('')}`:''}
+
+    <!-- Boutons action -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:16px;">
+      <button onclick="closeModal();startTimer('${actId}')" style="padding:11px;background:${act.color};border:none;border-radius:10px;color:#fff;font-weight:700;font-size:13px;">▶ Démarrer</button>
+      <button onclick="closeModal();openAddModal('${actId}')" style="padding:11px;background:var(--surface2);border:1px solid var(--border2);border-radius:10px;color:var(--muted);font-weight:700;font-size:13px;">✏️ Modifier</button>
+    </div>
+  `;
+
+  openModal(`${act.emoji} ${act.name}`, html);
+}
+
+// PWA
+if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault();deferredPrompt=e;
+  if(window.matchMedia('(display-mode: standalone)').matches)return;
+  const b=document.createElement('div');
+  b.style.cssText='position:fixed;bottom:72px;left:50%;transform:translateX(-50%);background:var(--surface2);border:1px solid #6C63FF55;padding:11px 16px;border-radius:12px;font-size:12px;font-weight:600;z-index:9998;display:flex;gap:10px;align-items:center;box-shadow:0 4px 20px #00000099;white-space:nowrap;';
+  b.innerHTML=`<span>📲 Installer TimeFlow</span><button onclick="installPWA()" style="padding:6px 14px;background:var(--accent);border:none;border-radius:7px;color:#fff;font-weight:700;font-size:12px;">Installer</button><button onclick="this.parentElement.remove()" style="background:none;border:none;color:#555;font-size:16px;">✕</button>`;
+  document.body.appendChild(b);
+});
+async function installPWA(){if(!deferredPrompt)return;deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;}
+
+// Init
+document.getElementById('fab').style.display='flex';
+render();
+</script>
+</body>
+</html>
